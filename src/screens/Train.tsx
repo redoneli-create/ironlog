@@ -329,6 +329,10 @@ function Picker() {
   const [open, setOpen] = useState<string | null>(null);
   const byId = new Map((routines ?? []).map((r) => [r.id, r]));
   const signal = homeSignal(sessions ?? [], localDate());
+  const todayKey = localDate();
+  const dowKey = String(((new Date().getDay() + 6) % 7) + 1);
+  const scheduledId = settings?.schedule?.[todayKey] ?? settings?.weeklySchedule?.[dowKey];
+  const scheduled = scheduledId ? byId.get(scheduledId) : undefined;
   const ordered = [...(programs ?? [])].sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9));
   const finished = (sessions ?? []).filter((s) => s.endedAt);
   const stale = finished.length >= 3 && (!settings?.lastExportAt || Date.now() - settings.lastExportAt > 14 * 864e5);
@@ -342,6 +346,23 @@ function Picker() {
         <div className="mt-0.5 text-lg font-semibold">{signal.title}</div>
         <div className="mt-0.5 text-xs text-muted">{signal.detail}</div>
       </Card>
+
+      {scheduled && (
+        <Card className="border-accent/30">
+          <div className="text-[12px] text-muted">今天安排</div>
+          <div className="mt-0.5 text-lg font-semibold">{scheduled.name}</div>
+          <div className="mt-0.5 text-[12px] text-muted">{plannedSets(scheduled)} 组 · 来自日历</div>
+          <button
+            onClick={() => {
+              void startSession(undefined, scheduled.id);
+              void ensureNotifyPermission();
+            }}
+            className="press mt-2 w-full rounded-xl bg-accent py-3 text-sm font-semibold text-onaccent"
+          >
+            开始
+          </button>
+        </Card>
+      )}
 
       {needBackup && (
         <Card className="border-accent/40">

@@ -68,7 +68,7 @@ const prog = (id: string, name: string, weeks: number, routineIds: string[], not
   order,
 });
 
-export const ROUTINES: Routine[] = [
+const RAW_ROUTINES: Routine[] = [
   routine("r-fb-a", "全身 A", [
     single(slot("0043", 3, "5", 180)),
     single(slot("0025", 3, "5", 180)),
@@ -176,6 +176,26 @@ export const ROUTINES: Routine[] = [
     single(slot("0334", 3, "15", 60)),
     single(slot("0276", 3, "12", 45)),
   ]),
+  routine("r-fem-glute-c", "臀部强化", [
+    single(slot("1409", 4, "10", 120)),
+    single(slot("0117", 3, "8", 120)),
+    single(slot("0381", 3, "10", 90)),
+    single(slot("0597", 3, "15", 60)),
+    single(slot("0417", 4, "15", 45)),
+  ]),
+  routine("r-fem-upper-a", "上肢线条", [
+    single(slot("0289", 3, "10", 90)),
+    single(slot("0818", 3, "12", 90)),
+    single(slot("0334", 3, "15", 60)),
+    single(slot("0241", 3, "12", 60)),
+    single(slot("0383", 3, "15", 60)),
+  ]),
+  routine("r-fem-core", "核心", [
+    single(slot("0276", 3, "12", 45)),
+    single(slot("0274", 3, "15", 45)),
+    single(slot("0472", 3, "12", 60)),
+    single(slot("x-plank", 3, "45s", 45)),
+  ]),
   routine("r-fem-d", "全身 B", [
     single(slot("2287", 3, "12", 90)),
     single(slot("1299", 3, "10", 90)),
@@ -186,6 +206,12 @@ export const ROUTINES: Routine[] = [
   ]),
 ];
 
+export const ROUTINES: Routine[] = RAW_ROUTINES.map((r) => ({
+  ...r,
+  official: true,
+  female: r.id.startsWith("r-fem"),
+}));
+
 export const PROGRAMS: Program[] = [
   prog("p-fb", "新手全身", 8, ["r-fb-a", "r-fb-b"], "每周 3 练，A/B 交替", 1),
   prog("p-ul", "上下肢分化", 8, ["r-ul-u1", "r-ul-l1", "r-ul-u2", "r-ul-l2"], "每周 4 练", 2),
@@ -193,7 +219,9 @@ export const PROGRAMS: Program[] = [
   prog("p-db", "哑铃自重", 6, ["r-db-a", "r-db-b"], "家庭器械最小化", 4),
   prog("p-fem-glute", "女性 · 臀腿塑形", 8, ["r-fem-a", "r-fem-b"], "每周 2–3 练，臀腿优先", 5),
   prog("p-fem-full", "女性 · 全身塑形", 6, ["r-fem-c", "r-fem-d"], "每周 3 练轮换，线条优先", 6),
-];
+  prog("p-fem-shape", "女性 · 三练塑形", 8, ["r-fem-c", "r-fem-upper-a", "r-fem-core"], "臀腿 + 上肢 + 核心，一周三轮", 7),
+].map((p) => ({ ...p, official: true, female: p.id.startsWith("p-fem") }));
+
 
 export const SEED_VERSION = 4;
 

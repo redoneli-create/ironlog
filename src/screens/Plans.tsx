@@ -12,8 +12,9 @@ import {
 } from "../lib/db";
 import { plannedSets, startSession } from "../lib/session";
 import { toast } from "../lib/toast";
-import { Btn, Card, Empty, Field, Sheet, TextInput } from "../components/ui";
+import { Btn, Card, Chip, Empty, Field, Sheet, TextInput } from "../components/ui";
 import { ExercisePicker } from "../components/ExercisePicker";
+import { CalendarScreen } from "./Calendar";
 
 type Slot = RoutineExercise & { merge?: boolean };
 
@@ -77,7 +78,23 @@ function RoutineEditor(props: { routine: Routine | null; onClose: () => void }) 
   };
 
   return (
-    <Sheet open onClose={props.onClose} title={props.routine ? "编辑例程" : "新建例程"}>
+    <Sheet
+      open
+      onClose={props.onClose}
+      title={props.routine ? "编辑例程" : "新建例程"}
+      footer={
+        <div className="space-y-2">
+          <Btn onClick={() => void save()} disabled={!slots.length}>
+            {props.routine ? "保存修改" : "创建例程"}
+          </Btn>
+          {props.routine && (
+            <button onClick={() => void remove()} className="w-full py-1.5 text-[12px] text-muted">
+              删除该例程
+            </button>
+          )}
+        </div>
+      }
+    >
       <Field label="例程名">
         <TextInput value={name} onChange={setName} placeholder="例如 上肢 A" />
       </Field>
@@ -126,14 +143,6 @@ function RoutineEditor(props: { routine: Routine | null; onClose: () => void }) 
       <Btn kind="ghost" className="mt-3" onClick={() => setPicking(true)}>
         + 添加动作
       </Btn>
-      <Btn className="mt-2" onClick={() => void save()} disabled={!slots.length}>
-        保存例程
-      </Btn>
-      {props.routine && (
-        <button onClick={() => void remove()} className="mt-3 w-full py-2 text-xs text-muted">
-          删除该例程
-        </button>
-      )}
 
       <ExercisePicker open={picking} onClose={() => setPicking(false)} onPick={add} />
     </Sheet>
@@ -145,6 +154,7 @@ function ProgramEditor(props: { program: Program | null; routines: Routine[]; on
   const [weeks, setWeeks] = useState(String(props.program?.weeks ?? 8));
   const [note, setNote] = useState(props.program?.note ?? "");
   const [ids, setIds] = useState<string[]>(props.program?.routineIds ?? []);
+  const [q, setQ] = useState("");
 
   const toggle = (id: string) =>
     setIds((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
@@ -162,7 +172,30 @@ function ProgramEditor(props: { program: Program | null; routines: Routine[]; on
   };
 
   return (
-    <Sheet open onClose={props.onClose} title={props.program ? "编辑计划" : "新建计划"}>
+    <Sheet
+      open
+      onClose={props.onClose}
+      title={props.program ? "编辑计划" : "新建计划"}
+      footer={
+        <div className="space-y-2">
+          <Btn onClick={() => void save()}>保存计划</Btn>
+          {props.program && (
+            <button
+              onClick={() => {
+                const removed = props.program!;
+                void db.programs.delete(removed.id).then(() => {
+                  props.onClose();
+                  toast("已删除计划「" + removed.name + "」", "撤销", () => void db.programs.put(removed));
+                });
+              }}
+              className="w-full py-1.5 text-[12px] text-muted"
+            >
+              删除该计划
+            </button>
+          )}
+        </div>
+      }
+    >
       <div className="space-y-2">
         <Field label="计划名">
           <TextInput value={name} onChange={setName} placeholder="例如 我的推拉腿" />
@@ -178,45 +211,51 @@ function ProgramEditor(props: { program: Program | null; routines: Routine[]; on
       </div>
 
       <div className="mt-3 text-[12px] text-muted">选择例程</div>
-      <div className="mt-1 space-y-1">
-        {props.routines.map((r) => (
-          <button
-            key={r.id}
-            onClick={() => toggle(r.id)}
-            className={
-              "flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm " +
-              (ids.includes(r.id) ? "bg-accent/10 text-accent" : "bg-surface2 text-ink")
-            }
-          >
-            <span>{r.name}</span>
-            <span className="text-[12px] text-muted tabular-nums">{plannedSets(r)} 组</span>
-          </button>
-        ))}
+      <div className="mt-1">
+        <TextInput value={q} onChange={setQ} placeholder="搜索例程，或按分类找" />
+      </div>
+      <div className="mt-2 max-h-64 space-y-2 overflow-y-auto pr-1">
+        {[
+          { key: "female", title: "女生专区" },
+          { key: "mine", title: "我的例程" },
+          { key: "official", title: "官方例程" },
+        ].map((g) => {
+          const list = props.routines
+            .filter((r) =>
+              g.key === "female" ? r.female : g.key === "official" ? r.official && !r.female : !r.official && !r.female,
+            )
+            .filter((r) => !q.trim() || r.name.includes(q.trim()));
+          if (!list.length) return null;
+          return (
+            <div key={g.key}>
+              <div className="px-1 pb-1 text-[11px] text-muted">
+                {g.title} · {list.length}
+              </div>
+              <div className="space-y-1">
+                {list.map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => toggle(r.id)}
+                    className={
+                      "flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm " +
+                      (ids.includes(r.id) ? "bg-accent/10 text-accent" : "bg-surface2 text-ink")
+                    }
+                  >
+                    <span>{r.name}</span>
+                    <span className="text-[11px] text-muted tabular-nums">{plannedSets(r)} 组</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
         {!props.routines.length && <Empty text="先创建一个例程" />}
       </div>
 
-      <Btn className="mt-3" onClick={() => void save()}>
-        保存计划
-      </Btn>
-      {props.program && (
-        <button
-          onClick={() => {
-            const removed = props.program!;
-            void db.programs.delete(removed.id).then(() => {
-              props.onClose();
-              toast("已删除计划「" + removed.name + "」", "撤销", () => void db.programs.put(removed));
-            });
-          }}
-          className="mt-3 w-full py-2 text-xs text-muted"
-        >
-          删除该计划
-        </button>
-      )}
+
     </Sheet>
   );
 }
-
-const BUILTIN_PROGRAMS = new Set(["p-fb", "p-ul", "p-ppl", "p-db", "p-fem-glute", "p-fem-full"]);
 
 export function PlansScreen({ onStart }: { onStart: () => void }) {
   const programs = useLiveQuery(() => db.programs.toArray(), []);
@@ -224,7 +263,8 @@ export function PlansScreen({ onStart }: { onStart: () => void }) {
   const [open, setOpen] = useState<string | null>(null);
   const [progEdit, setProgEdit] = useState<Program | null | "new">(null);
   const [routineEdit, setRoutineEdit] = useState<Routine | null | "new">(null);
-  const [groups, setGroups] = useState<Record<string, boolean>>({ mine: true, builtin: true });
+  const [groups, setGroups] = useState<Record<string, boolean>>({ female: true, mine: true, official: true });
+  const [view, setView] = useState<"plans" | "calendar">("plans");
   const byId = new Map((routines ?? []).map((r) => [r.id, r]));
 
   const start = (programId: string | undefined, routineId: string) => {
@@ -232,8 +272,9 @@ export function PlansScreen({ onStart }: { onStart: () => void }) {
   };
 
   const sorted = [...(programs ?? [])].sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9));
-  const mine = sorted.filter((p) => !BUILTIN_PROGRAMS.has(p.id));
-  const official = sorted.filter((p) => BUILTIN_PROGRAMS.has(p.id));
+  const female = sorted.filter((p) => p.female);
+  const mine = sorted.filter((p) => !p.official && !p.female);
+  const official = sorted.filter((p) => p.official && !p.female);
 
   const programCard = (p: Program) => {
     const expanded = open === p.id;
@@ -299,8 +340,25 @@ export function PlansScreen({ onStart }: { onStart: () => void }) {
       </div>
     ) : null;
 
+  if (view === "calendar") {
+    return (
+      <div className="space-y-3">
+        <div className="flex gap-1.5">
+          <Chip active={false} onClick={() => setView("plans")}>训练计划</Chip>
+          <Chip active onClick={() => setView("calendar")}>日历</Chip>
+        </div>
+        <CalendarScreen />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
+      <div className="flex gap-1.5">
+        <Chip active onClick={() => setView("plans")}>训练计划</Chip>
+        <Chip active={false} onClick={() => setView("calendar")}>日历</Chip>
+      </div>
+
       <div className="flex gap-2">
         <Btn kind="ghost" className="py-2.5" onClick={() => setProgEdit("new")}>
           + 计划
@@ -310,8 +368,9 @@ export function PlansScreen({ onStart }: { onStart: () => void }) {
         </Btn>
       </div>
 
+      {section("female", "女性专区", female)}
       {section("mine", "我的计划", mine)}
-      {section("builtin", "官方计划", official)}
+      {section("official", "官方计划", official)}
 
       <Card>
         <div className="flex items-baseline justify-between">

@@ -87,7 +87,14 @@ export function TextInput(props: {
   );
 }
 
-export function Sheet(props: { open: boolean; onClose: () => void; title?: string; children: ReactNode }) {
+export function Sheet(props: {
+  open: boolean;
+  onClose: () => void;
+  title?: string;
+  children: ReactNode;
+  /** 固定在底部、始终可见的操作区 */
+  footer?: ReactNode;
+}) {
   const closeRef = useRef(props.onClose);
   closeRef.current = props.onClose;
 

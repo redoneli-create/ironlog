@@ -52,6 +52,10 @@ export interface Routine {
   id: string;
   name: string;
   blocks: Block[];
+  /** 内置例程（来自种子） */
+  official?: boolean;
+  /** 女生专区 */
+  female?: boolean;
 }
 
 export interface Program {
@@ -61,6 +65,9 @@ export interface Program {
   routineIds: string[];
   note?: string;
   order?: number;
+  official?: boolean;
+  /** 显示在女生专区 */
+  female?: boolean;
 }
 
 export interface SetLog {
@@ -102,6 +109,10 @@ export interface Settings {
   backupSnoozeUntil?: number;
   /** 壁纸不透明度 0-100 */
   wallpaperOpacity?: number;
+  /** 日历排期：日期 YYYY-MM-DD → 例程 id */
+  schedule?: Record<string, string>;
+  /** 每周固定安排：1-7（周一=1）→ 例程 id */
+  weeklySchedule?: Record<string, string>;
 }
 
 export type DB = Dexie & {

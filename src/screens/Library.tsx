@@ -98,11 +98,11 @@ function Create({ onClose }: { onClose: () => void }) {
   const [target, setTarget] = useState("");
 
   const save = async () => {
-    if (!name.trim()) return;
+    if (!zh.trim()) return;
     await db.exercises.put({
       id: "c-" + uid(),
-      name: name.trim(),
-      zh: zh.trim() || undefined,
+      name: name.trim() || zh.trim(),
+      zh: zh.trim(),
       bodyPart: part,
       equipment: equipment.trim() || "dumbbell",
       target: target.trim(),
@@ -115,11 +115,11 @@ function Create({ onClose }: { onClose: () => void }) {
   return (
     <Sheet open onClose={onClose} title="自定义动作">
       <div className="space-y-2">
-        <Field label="名称（英文，便于排序/导出）">
-          <TextInput value={name} onChange={setName} placeholder="e.g. cable y-raise" />
-        </Field>
-        <Field label="中文名（可选）">
+        <Field label="动作名（中文，必填）">
           <TextInput value={zh} onChange={setZh} placeholder="例如 绳索 Y 字举" />
+        </Field>
+        <Field label="英文名（可选，留空不影响使用）">
+          <TextInput value={name} onChange={setName} placeholder="e.g. cable y-raise" />
         </Field>
         <Field label="部位">
           <div className="no-scrollbar flex gap-1.5 overflow-x-auto py-1">
@@ -139,7 +139,7 @@ function Create({ onClose }: { onClose: () => void }) {
           </Field>
         </div>
       </div>
-      <Btn className="mt-4" onClick={() => void save()} disabled={!name.trim()}>
+      <Btn className="mt-4" onClick={() => void save()} disabled={!zh.trim()}>
         保存动作
       </Btn>
     </Sheet>
