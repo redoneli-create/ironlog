@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
+import { pushBack } from "../lib/backstack";
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <div className={"rounded-2xl border border-line bg-surface p-4 " + className}>{children}</div>;
@@ -45,7 +46,7 @@ export function Chip(props: { active?: boolean; onClick?: () => void; children: 
     <button
       onClick={props.onClick}
       className={
-        "press shrink-0 rounded-lg border px-2.5 py-1.5 text-[11px] " +
+        "press shrink-0 rounded-lg border px-2.5 py-1.5 text-[12px] " +
         (props.active ? "border-accent bg-accent/10 text-accent" : "border-line bg-surface2 text-muted")
       }
     >
@@ -57,7 +58,7 @@ export function Chip(props: { active?: boolean; onClick?: () => void; children: 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
-      <div className="mb-1 text-[11px] text-muted">{label}</div>
+      <div className="mb-1 text-[12px] text-muted">{label}</div>
       {children}
     </label>
   );
@@ -87,6 +88,17 @@ export function TextInput(props: {
 }
 
 export function Sheet(props: { open: boolean; onClose: () => void; title?: string; children: ReactNode }) {
+  const closeRef = useRef(props.onClose);
+  closeRef.current = props.onClose;
+
+  useEffect(() => {
+    if (!props.open) return;
+    return pushBack(() => {
+      closeRef.current();
+      return true;
+    });
+  }, [props.open]);
+
   if (!props.open) return null;
   return (
     <div className="fixed inset-0 z-40 flex items-end bg-black/55" onClick={props.onClose}>

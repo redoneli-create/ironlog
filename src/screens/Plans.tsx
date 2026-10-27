@@ -37,7 +37,7 @@ const toBlocks = (slots: Slot[]): Block[] => {
 
 const Mini = (props: { label: string; value: string; onChange: (v: string) => void; mode?: "numeric" | "text" }) => (
   <label className="block">
-    <div className="mb-0.5 text-[10px] text-muted">{props.label}</div>
+    <div className="mb-0.5 text-[12px] text-muted">{props.label}</div>
     <input
       inputMode={props.mode === "text" ? "text" : "numeric"}
       value={props.value}
@@ -91,7 +91,7 @@ function RoutineEditor(props: { routine: Routine | null; onClose: () => void }) 
                 <button
                   onClick={() => patch(i, { merge: !s.merge })}
                   className={
-                    "rounded-md px-1.5 py-1 text-[10px] " + (s.merge ? "bg-accent/15 text-accent" : "text-muted")
+                    "rounded-md px-1.5 py-1 text-[12px] " + (s.merge ? "bg-accent/15 text-accent" : "text-muted")
                   }
                   title="并入上一动作为超级组"
                 >
@@ -175,7 +175,7 @@ function ProgramEditor(props: { program: Program | null; routines: Routine[]; on
         </div>
       </div>
 
-      <div className="mt-3 text-[11px] text-muted">选择例程</div>
+      <div className="mt-3 text-[12px] text-muted">选择例程</div>
       <div className="mt-1 space-y-1">
         {props.routines.map((r) => (
           <button
@@ -187,7 +187,7 @@ function ProgramEditor(props: { program: Program | null; routines: Routine[]; on
             }
           >
             <span>{r.name}</span>
-            <span className="text-[11px] text-muted tabular-nums">{plannedSets(r)} 组</span>
+            <span className="text-[12px] text-muted tabular-nums">{plannedSets(r)} 组</span>
           </button>
         ))}
         {!props.routines.length && <Empty text="先创建一个例程" />}
@@ -214,17 +214,88 @@ function ProgramEditor(props: { program: Program | null; routines: Routine[]; on
   );
 }
 
+const BUILTIN_PROGRAMS = new Set(["p-fb", "p-ul", "p-ppl", "p-db", "p-fem-glute", "p-fem-full"]);
+
 export function PlansScreen({ onStart }: { onStart: () => void }) {
   const programs = useLiveQuery(() => db.programs.toArray(), []);
   const routines = useLiveQuery(() => db.routines.toArray(), []);
   const [open, setOpen] = useState<string | null>(null);
   const [progEdit, setProgEdit] = useState<Program | null | "new">(null);
   const [routineEdit, setRoutineEdit] = useState<Routine | null | "new">(null);
+  const [groups, setGroups] = useState<Record<string, boolean>>({ mine: true, builtin: true });
   const byId = new Map((routines ?? []).map((r) => [r.id, r]));
 
   const start = (programId: string | undefined, routineId: string) => {
     void startSession(programId, routineId).then(onStart);
   };
+
+  const sorted = [...(programs ?? [])].sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9));
+  const mine = sorted.filter((p) => !BUILTIN_PROGRAMS.has(p.id));
+  const official = sorted.filter((p) => BUILTIN_PROGRAMS.has(p.id));
+
+  const programCard = (p: Program) => {
+    const expanded = open === p.id;
+    return (
+      <div key={p.id} className="overflow-hidden rounded-2xl border border-line bg-surface">
+        <button
+          onClick={() => setOpen(expanded ? null : p.id)}
+          className="press flex w-full items-baseline justify-between p-4 text-left"
+        >
+          <div className="min-w-0">
+            <div className="font-semibold">{p.name}</div>
+            <div className="mt-0.5 truncate text-[12px] text-muted">{p.note ?? "自定义计划"}</div>
+          </div>
+          <div className="shrink-0 pl-2 text-[12px] text-muted">
+            {p.weeks} 周 · {p.routineIds.length} 练
+          </div>
+        </button>
+        {expanded && (
+          <div className="space-y-1 px-3 pb-3">
+            {p.routineIds.map((rid) => {
+              const r = byId.get(rid);
+              if (!r) return null;
+              return (
+                <div key={rid} className="flex gap-1">
+                  <button
+                    onClick={() => start(p.id, rid)}
+                    className="press flex flex-1 items-center justify-between rounded-xl bg-surface2 px-3 py-3 text-left"
+                  >
+                    <span className="text-sm">{r.name}</span>
+                    <span className="text-[12px] text-muted tabular-nums">{plannedSets(r)} 组</span>
+                  </button>
+                  <button
+                    onClick={() => setRoutineEdit(r)}
+                    className="press rounded-xl border border-line px-3 text-[12px] text-muted"
+                  >
+                    编辑
+                  </button>
+                </div>
+              );
+            })}
+            <button onClick={() => setProgEdit(p)} className="w-full py-2 text-[12px] text-muted">
+              管理计划
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const section = (key: string, title: string, list: Program[]) =>
+    list.length ? (
+      <div key={key} className="space-y-2">
+        <button
+          onClick={() => setGroups((g) => ({ ...g, [key]: !g[key] }))}
+          className="flex w-full items-center justify-between px-1 py-1"
+        >
+          <span className="text-[12px] font-medium text-muted">
+            {title} · {list.length}
+          </span>
+          <span className="text-[12px] text-muted">{groups[key] ? "收起" : "展开"}</span>
+        </button>
+        {groups[key] && list.map(programCard)}
+      </div>
+    ) : null;
 
   return (
     <div className="space-y-3">
@@ -237,58 +308,13 @@ export function PlansScreen({ onStart }: { onStart: () => void }) {
         </Btn>
       </div>
 
-      {[...(programs ?? [])].sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9)).map((p) => {
-        const expanded = open === p.id;
-        return (
-          <div key={p.id} className="overflow-hidden rounded-2xl border border-line bg-surface">
-            <button
-              onClick={() => setOpen(expanded ? null : p.id)}
-              className="press flex w-full items-baseline justify-between p-4 text-left"
-            >
-              <div className="min-w-0">
-                <div className="font-semibold">{p.name}</div>
-                <div className="mt-0.5 truncate text-[11px] text-muted">{p.note ?? "自定义计划"}</div>
-              </div>
-              <div className="shrink-0 pl-2 text-[11px] text-muted">
-                {p.weeks} 周 · {p.routineIds.length} 练
-              </div>
-            </button>
-            {expanded && (
-              <div className="space-y-1 px-3 pb-3">
-                {p.routineIds.map((rid) => {
-                  const r = byId.get(rid);
-                  if (!r) return null;
-                  return (
-                    <div key={rid} className="flex gap-1">
-                      <button
-                        onClick={() => start(p.id, rid)}
-                        className="press flex flex-1 items-center justify-between rounded-xl bg-surface2 px-3 py-3 text-left"
-                      >
-                        <span className="text-sm">{r.name}</span>
-                        <span className="text-[11px] text-muted tabular-nums">{plannedSets(r)} 组</span>
-                      </button>
-                      <button
-                        onClick={() => setRoutineEdit(r)}
-                        className="press rounded-xl border border-line px-3 text-[11px] text-muted"
-                      >
-                        编辑
-                      </button>
-                    </div>
-                  );
-                })}
-                <button onClick={() => setProgEdit(p)} className="w-full py-2 text-[11px] text-muted">
-                  管理计划
-                </button>
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {section("mine", "我的计划", mine)}
+      {section("builtin", "官方计划", official)}
 
       <Card>
         <div className="flex items-baseline justify-between">
           <h3 className="text-sm font-semibold">全部例程</h3>
-          <span className="text-[11px] text-muted">{(routines ?? []).length} 个</span>
+          <span className="text-[12px] text-muted">{(routines ?? []).length} 个</span>
         </div>
         <div className="mt-2 space-y-1">
           {(routines ?? []).map((r) => (
@@ -298,11 +324,11 @@ export function PlansScreen({ onStart }: { onStart: () => void }) {
                 className="press flex flex-1 items-center justify-between rounded-xl bg-surface2 px-3 py-2.5 text-left"
               >
                 <span className="truncate text-sm">{r.name}</span>
-                <span className="shrink-0 pl-2 text-[11px] text-muted tabular-nums">{plannedSets(r)} 组</span>
+                <span className="shrink-0 pl-2 text-[12px] text-muted tabular-nums">{plannedSets(r)} 组</span>
               </button>
               <button
                 onClick={() => setRoutineEdit(r)}
-                className="press rounded-xl border border-line px-3 text-[11px] text-muted"
+                className="press rounded-xl border border-line px-3 text-[12px] text-muted"
               >
                 编辑
               </button>

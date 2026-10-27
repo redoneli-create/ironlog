@@ -29,7 +29,7 @@ function Trend({ points, unit }: { points: Point[]; unit: string }) {
           {last.v}
           <span className="ml-1 text-xs text-muted">{unit}</span>
         </div>
-        <div className={"text-[11px] tabular-nums " + (delta > 0 ? "text-accent" : "text-muted")}>
+        <div className={"text-[12px] tabular-nums " + (delta > 0 ? "text-accent" : "text-muted")}>
           {(delta > 0 ? "+" : "") + delta} {unit}
         </div>
       </div>
@@ -40,7 +40,7 @@ function Trend({ points, unit }: { points: Point[]; unit: string }) {
           <circle key={i} cx={x(i)} cy={y(p.v)} r={points.length > 40 ? 0 : 2} fill="var(--accent)" />
         ))}
       </svg>
-      <div className="flex justify-between text-[10px] text-muted">
+      <div className="flex justify-between text-[12px] text-muted">
         <span>{points[0].date.slice(5)}</span>
         <span>{last.date.slice(5)}</span>
       </div>
@@ -115,7 +115,7 @@ export function BodyScreen() {
       <Card>
         <div className="flex items-baseline justify-between">
           <h3 className="text-sm font-semibold">历史</h3>
-          <span className="text-[11px] text-muted">{list.length} 条</span>
+          <span className="text-[12px] text-muted">{list.length} 条</span>
         </div>
         <div className="mt-2 space-y-1">
           {[...list].reverse().slice(0, 12).map((m) => (

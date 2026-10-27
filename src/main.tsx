@@ -13,6 +13,8 @@ import { MeScreen } from "./screens/Me";
 import { Toasts } from "./components/Toasts";
 import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
+import { App as CapApp } from "@capacitor/app";
+import { runBack } from "./lib/backstack";
 
 type Tab = "train" | "plans" | "library" | "body" | "me";
 
@@ -26,8 +28,8 @@ const TABS: { id: Tab; label: string }[] = [
 
 function TabIcon({ id }: { id: Tab }) {
   const common = {
-    width: 22,
-    height: 22,
+    width: 26,
+    height: 26,
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: "currentColor",
@@ -81,6 +83,28 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let disposed = false;
+    let handle: { remove: () => void } | undefined;
+    void CapApp.addListener("backButton", ({ canGoBack }) => {
+      if (runBack()) return;
+      if (tab !== "train") {
+        setTab("train");
+        return;
+      }
+      if (canGoBack) window.history.back();
+      else void CapApp.exitApp();
+    }).then((h) => {
+      handle = h;
+      if (disposed) void h.remove();
+    });
+    return () => {
+      disposed = true;
+      void handle?.remove();
+    };
+  }, [tab]);
+
+  useEffect(() => {
     if (!settings) return;
     applyTheme(settings.theme, settings.accent);
     applyWallpaper(settings.wallpaper, settings.wallpaperOpacity);
@@ -91,9 +115,9 @@ function App() {
       <header className="sticky top-0 z-10 flex items-center justify-between bg-bg/80 px-4 py-3 backdrop-blur">
         <div className="flex items-baseline gap-2">
           <span className="text-2xl font-black leading-none tracking-tight">练</span>
-          <span className="text-[11px] text-muted">离线训练记录</span>
+          <span className="text-[12px] text-muted">离线训练记录</span>
         </div>
-        <span className="text-[11px] text-muted tabular-nums">{localDate()}</span>
+        <span className="text-[12px] text-muted tabular-nums">{localDate()}</span>
       </header>
 
       <main className="flex-1 px-4 pb-28">
@@ -114,7 +138,7 @@ function App() {
                 onClick={() => setTab(t.id)}
                 aria-label={t.label}
                 className={
-                  "flex min-h-[58px] flex-1 flex-col items-center justify-center gap-1 pb-1 pt-2 text-[11px] font-medium " +
+                  "flex min-h-[64px] flex-1 flex-col items-center justify-center gap-1 pb-1.5 pt-2 text-[12px] font-medium " +
                   (active ? "text-accent" : "text-muted")
                 }
               >

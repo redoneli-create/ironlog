@@ -18,7 +18,7 @@ export function Toasts() {
                 t.onAction?.();
                 dismissToast(t.id);
               }}
-              className="shrink-0 rounded-lg bg-accent/15 px-2.5 py-1 text-[11px] font-semibold text-accent"
+              className="shrink-0 rounded-lg bg-accent/15 px-2.5 py-1 text-[12px] font-semibold text-accent"
             >
               {t.actionLabel}
             </button>

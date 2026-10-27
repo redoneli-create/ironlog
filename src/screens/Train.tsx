@@ -25,6 +25,7 @@ import { startRest, stopRest } from "../lib/rest";
 import { keepScreenOn } from "../lib/keepAwake";
 import { ensureNotifyPermission } from "../lib/notify";
 import { exportJSON } from "../lib/backup";
+import { estimateKcal, latestWeight } from "../lib/calories";
 import { toast } from "../lib/toast";
 import { Card, Sheet } from "../components/ui";
 import { RestBar } from "../components/RestBar";
@@ -64,7 +65,7 @@ function SetRow(props: {
           placeholder="0"
           className="h-12 w-full rounded-xl bg-surface2 pr-8 pl-3 text-base tabular-nums outline-none focus:ring-2 focus:ring-accent/60"
         />
-        <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-muted">
+        <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[12px] text-muted">
           {props.unit}
         </span>
       </div>
@@ -76,7 +77,7 @@ function SetRow(props: {
           placeholder="0"
           className="h-12 w-full rounded-xl bg-surface2 pr-8 pl-3 text-base tabular-nums outline-none focus:ring-2 focus:ring-accent/60"
         />
-        <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-muted">
+        <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[12px] text-muted">
           次
         </span>
       </div>
@@ -118,7 +119,7 @@ function ExerciseCard(props: {
       <div className="flex items-baseline justify-between gap-2">
         <div className="min-w-0">
           <div className="truncate font-medium">{exerciseLabel(props.exercise)}</div>
-          <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted">
+          <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted">
             <span className="truncate">
               {equipmentZh(props.exercise?.equipment)}
               {props.slot.tempo ? " · 节奏 " + props.slot.tempo : ""}
@@ -126,20 +127,20 @@ function ExerciseCard(props: {
             {!!props.exercise?.links?.length && (
               <button
                 onClick={props.onTutorial}
-                className="press shrink-0 rounded-md border border-accent/40 px-1.5 py-0.5 text-[10px] text-accent"
+                className="press shrink-0 rounded-md border border-accent/40 px-1.5 py-0.5 text-[12px] text-accent"
               >
                 教程 {props.exercise.links.length}
               </button>
             )}
           </div>
         </div>
-        <button onClick={props.onCycleRest} className="press shrink-0 rounded-lg bg-surface2 px-2 py-1 text-[11px] text-muted">
+        <button onClick={props.onCycleRest} className="press shrink-0 rounded-lg bg-surface2 px-2 py-1 text-[12px] text-muted">
           {props.slot.sets} 组 × {props.slot.reps} · 休 {props.restSec}s
         </button>
       </div>
 
       {(props.ghost || sug) && (
-        <div className="mt-1 text-[11px]">
+        <div className="mt-1 text-[12px]">
           {props.ghost && (
             <span className="text-muted">
               上次 {props.ghost.weight}
@@ -174,7 +175,7 @@ function ExerciseCard(props: {
         })}
       </div>
       {done > 0 && (
-        <div className="mt-2 text-[11px] text-muted tabular-nums">
+        <div className="mt-2 text-[12px] text-muted tabular-nums">
           已完成 {done}/{props.slot.sets}
         </div>
       )}
@@ -187,6 +188,7 @@ function Workout(props: { session: Session }) {
   const routine = useLiveQuery(() => db.routines.get(session.routineId), [session.routineId]);
   const settings = useLiveQuery(() => db.settings.get("app"), []);
   const sessions = useLiveQuery(() => db.sessions.toArray(), []);
+  const metrics = useLiveQuery(() => db.metrics.toArray(), []);
   const ghosts = ghostsOf((sessions ?? []).filter((s) => s.id !== session.id));
 
   const ids = routine ? [...new Set(routine.blocks.flatMap((b) => b.exercises.map((e) => e.exerciseId)))] : [];
@@ -241,7 +243,7 @@ function Workout(props: { session: Session }) {
         </button>
         <div className="text-center">
           <div className="text-sm font-semibold">{routine.name}</div>
-          <div className="text-[11px] text-muted tabular-nums">{dur(now - session.startedAt)}</div>
+          <div className="text-[12px] text-muted tabular-nums">{dur(now - session.startedAt)}</div>
         </div>
         <div className="text-sm font-semibold tabular-nums text-accent">
           {done}/{total}
@@ -255,7 +257,7 @@ function Workout(props: { session: Session }) {
       {routine.blocks.map((block, bi) => (
         <div key={bi} className="space-y-2">
           {block.type === "superset" && (
-            <div className="px-1 text-[11px] font-medium uppercase tracking-wide text-accent">超级组 · 交替</div>
+            <div className="px-1 text-[12px] font-medium uppercase tracking-wide text-accent">超级组 · 交替</div>
           )}
           {block.exercises.map((slot, si) => {
             const ghost = ghosts.get(slot.exerciseId);
@@ -283,7 +285,8 @@ function Workout(props: { session: Session }) {
 
       <Sheet open={sheet} onClose={() => setSheet(false)} title="结束训练">
         <div className="text-sm text-muted tabular-nums">
-          {dur(now - session.startedAt)} · {done} 组 · 容量 {sessionVolume(session.logs)} kg
+          {dur(now - session.startedAt)} · {done} 组 · 容量 {sessionVolume(session.logs)} kg · ≈{" "}
+          {estimateKcal(session, [...byId.values()], latestWeight(metrics ?? []))} kcal
         </div>
         <button
           onClick={() => void finishSession(session).then(() => stopRest())}
@@ -326,7 +329,7 @@ function Picker() {
   return (
     <div className="space-y-3">
       <Card className="bg-gradient-to-br from-accent/20 to-transparent">
-        <div className="text-[11px] text-muted">{localDate()}</div>
+        <div className="text-[12px] text-muted">{localDate()}</div>
         <div className="mt-0.5 text-lg font-semibold">{signal.title}</div>
         <div className="mt-0.5 text-xs text-muted">{signal.detail}</div>
       </Card>
@@ -334,7 +337,7 @@ function Picker() {
       {needBackup && (
         <Card className="border-accent/40">
           <div className="text-sm font-semibold">该备份了</div>
-          <div className="mt-0.5 text-[11px] text-muted">
+          <div className="mt-0.5 text-[12px] text-muted">
             已记录 {finished.length} 次训练，建议导出 JSON 存到网盘；清缓存会丢数据。
           </div>
           <div className="mt-2 flex gap-2">
@@ -360,7 +363,7 @@ function Picker() {
 
       {last && (
         <div className="rounded-2xl border border-line bg-surface2 p-3">
-          <div className="text-[11px] text-muted">上次训练</div>
+          <div className="text-[12px] text-muted">上次训练</div>
           <div className="mt-0.5 text-sm font-medium">
             {lastRoutine?.name ?? "训练"} · {last.logs.length} 组 · {sessionVolume(last.logs)} kg
           </div>
@@ -377,9 +380,9 @@ function Picker() {
             >
               <div>
                 <div className="font-semibold">{p.name}</div>
-                <div className="mt-0.5 text-[11px] text-muted">{p.note}</div>
+                <div className="mt-0.5 text-[12px] text-muted">{p.note}</div>
               </div>
-              <div className="shrink-0 text-[11px] text-muted">
+              <div className="shrink-0 text-[12px] text-muted">
                 {p.weeks} 周 · {p.routineIds.length} 练
               </div>
             </button>
@@ -398,7 +401,7 @@ function Picker() {
                       className="press flex w-full items-center justify-between rounded-xl bg-surface2 px-3 py-3 text-left"
                     >
                       <span className="text-sm">{r.name}</span>
-                      <span className="text-[11px] text-muted tabular-nums">{plannedSets(r)} 组 · 开始</span>
+                      <span className="text-[12px] text-muted tabular-nums">{plannedSets(r)} 组 · 开始</span>
                     </button>
                   );
                 })}

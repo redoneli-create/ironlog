@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db, exerciseLabel, type Session } from "../lib/db";
-import { epley, prByExercise, sessionStats } from "../lib/metrics";
+import { db, exerciseLabel, localDate, type Session } from "../lib/db";
+import { epley, prByExercise, sessionStats, weekStart } from "../lib/metrics";
+import { estimateKcal, latestWeight } from "../lib/calories";
 import { toast } from "../lib/toast";
 import { Card, Empty, Sheet } from "../components/ui";
 
@@ -11,9 +12,11 @@ function SessionDetail({ session, onClose }: { session: Session; onClose: () => 
   const exercises = useLiveQuery(() => db.exercises.toArray(), []);
   const sessions = useLiveQuery(() => db.sessions.toArray(), []);
   const routine = useLiveQuery(() => db.routines.get(session.routineId), [session.routineId]);
+  const metrics = useLiveQuery(() => db.metrics.toArray(), []);
   const exMap = new Map((exercises ?? []).map((e) => [e.id, e]));
   const pr = prByExercise(sessions ?? []);
   const stats = sessionStats(session);
+  const kcal = estimateKcal(session, exercises ?? [], latestWeight(metrics ?? []));
 
   const ids = [...new Set(session.logs.map((l) => l.exerciseId))];
   const groups = ids.map((id) => ({
@@ -32,12 +35,13 @@ function SessionDetail({ session, onClose }: { session: Session; onClose: () => 
 
   return (
     <Sheet open onClose={onClose} title={(routine?.name ?? "训练") + " · " + session.date}>
-      <div className="flex gap-2 text-[11px] text-muted">
+      <div className="flex gap-2 text-[12px] text-muted">
         <span>{stats.sets} 组</span>
         <span>·</span>
         <span>{stats.volume} kg</span>
         <span>·</span>
         <span>{stats.minutes} 分钟</span>
+        <span>· ≈ {kcal} kcal</span>
         {prCount > 0 && <span className="text-accent">· {prCount} 个纪录</span>}
       </div>
 
@@ -46,7 +50,7 @@ function SessionDetail({ session, onClose }: { session: Session; onClose: () => 
           <div key={g.id}>
             <div className="flex items-baseline justify-between">
               <span className="text-sm">{exerciseLabel(exMap.get(g.id))}</span>
-              <span className="text-[11px] text-muted">{g.logs.length} 组</span>
+              <span className="text-[12px] text-muted">{g.logs.length} 组</span>
             </div>
             <div className="mt-1 flex flex-wrap gap-1">
               {g.logs.map((l) => {
@@ -55,7 +59,7 @@ function SessionDetail({ session, onClose }: { session: Session; onClose: () => 
                   <span
                     key={l.setNo}
                     className={
-                      "rounded-md px-2 py-1 text-[11px] tabular-nums " +
+                      "rounded-md px-2 py-1 text-[12px] tabular-nums " +
                       (best ? "bg-accent/15 text-accent" : "bg-surface2 text-ink")
                     }
                   >
@@ -98,11 +102,11 @@ export function HistoryScreen() {
 
   return (
     <div className="space-y-3">
-      <div className="px-1 text-[11px] text-muted">共 {done.length} 次训练</div>
+      <TodaySummary sessions={done} />
 
       {groups.map((g) => (
         <div key={g.month}>
-          <div className="mb-1 px-1 text-[11px] text-muted">{g.month}</div>
+          <div className="mb-1 px-1 text-[12px] text-muted">{g.month}</div>
           <div className="overflow-hidden rounded-2xl border border-line bg-surface">
             {g.items.map((s) => {
               const stats = sessionStats(s);
@@ -114,7 +118,7 @@ export function HistoryScreen() {
                 >
                   <div className="min-w-0">
                     <div className="truncate text-sm">{routineMap.get(s.routineId)?.name ?? "自由训练"}</div>
-                    <div className="text-[11px] text-muted tabular-nums">
+                    <div className="text-[12px] text-muted tabular-nums">
                       {s.date} · {stats.sets} 组 · {stats.volume} kg · {stats.minutes} 分
                     </div>
                   </div>
@@ -133,6 +137,23 @@ export function HistoryScreen() {
       )}
 
       {open && <SessionDetail session={open} onClose={() => setOpenId(null)} />}
+    </div>
+  );
+}
+
+function TodaySummary({ sessions }: { sessions: Session[] }) {
+  const today = localDate();
+  const week = weekStart(today);
+  const todayMinutes = sessions.filter((s) => s.date === today).reduce((n, s) => n + sessionStats(s).minutes, 0);
+  const weekMinutes = sessions.filter((s) => weekStart(s.date) === week).reduce((n, s) => n + sessionStats(s).minutes, 0);
+  return (
+    <div className="rounded-2xl border border-line bg-surface px-4 py-3">
+      <div className="text-[12px] text-muted">今日训练</div>
+      <div className="mt-0.5 flex items-baseline gap-1.5">
+        <span className="text-2xl font-semibold tabular-nums">{todayMinutes}</span>
+        <span className="text-xs text-muted">分钟</span>
+        <span className="ml-auto text-[12px] text-muted">本周 {weekMinutes} 分钟 · 共 {sessions.length} 次</span>
+      </div>
     </div>
   );
 }

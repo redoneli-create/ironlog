@@ -45,9 +45,9 @@ export function ExercisePicker(props: { open: boolean; onClose: () => void; onPi
           >
             <span className="min-w-0">
               <span className="block truncate text-sm">{exerciseLabel(e)}</span>
-              <span className="block truncate text-[11px] text-muted">{e.name}</span>
+              <span className="block truncate text-[12px] text-muted">{e.name}</span>
             </span>
-            <span className="ml-2 shrink-0 text-[11px] text-muted">
+            <span className="ml-2 shrink-0 text-[12px] text-muted">
               {BODY_PART_ZH[e.bodyPart] ?? e.bodyPart} · {equipmentZh(e.equipment)}
             </span>
           </button>

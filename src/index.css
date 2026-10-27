@@ -33,6 +33,10 @@ html[data-theme="light"] {
   color-scheme: light;
 }
 
+html {
+  font-size: 17px;
+}
+
 html,
 body,
 #root {

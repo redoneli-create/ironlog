@@ -30,7 +30,7 @@ export function RestBar() {
             {done ? "0:00" : mmss(left)}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[11px] text-muted">
+            <div className="truncate text-[12px] text-muted">
               {st.label}
               {done ? " · 休息结束" : ""}
             </div>
@@ -40,11 +40,11 @@ export function RestBar() {
           </div>
           <button
             onClick={() => extendRest(15)}
-            className="press h-10 rounded-xl border border-line px-2.5 text-[11px] text-muted"
+            className="press h-10 rounded-xl border border-line px-2.5 text-[12px] text-muted"
           >
             +15s
           </button>
-          <button onClick={stopRest} className="press h-10 rounded-xl bg-accent px-3 text-[11px] font-semibold text-onaccent">
+          <button onClick={stopRest} className="press h-10 rounded-xl bg-accent px-3 text-[12px] font-semibold text-onaccent">
             跳过
           </button>
         </div>

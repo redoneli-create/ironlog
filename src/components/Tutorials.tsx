@@ -24,11 +24,11 @@ export function TutorialList({ exercise, editable = false }: { exercise: Exercis
 
   return (
     <div>
-      <div className="text-[11px] text-muted">教程链接</div>
+      <div className="text-[12px] text-muted">教程链接</div>
       <div className="mt-1.5 space-y-1.5">
         {links.map((l) => (
           <div key={l.id} className="flex items-center gap-2 rounded-xl bg-surface2 px-3 py-2">
-            <span className="shrink-0 rounded-md bg-accent/15 px-1.5 py-0.5 text-[10px] text-accent">
+            <span className="shrink-0 rounded-md bg-accent/15 px-1.5 py-0.5 text-[12px] text-accent">
               {kindLabel[l.kind]}
             </span>
             <a href={l.url} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate text-xs">
@@ -49,7 +49,7 @@ export function TutorialList({ exercise, editable = false }: { exercise: Exercis
             )}
           </div>
         ))}
-        {!links.length && <p className="text-[11px] text-muted">还没有教程，可粘贴 B 站 / 抖音 视频链接</p>}
+        {!links.length && <p className="text-[12px] text-muted">还没有教程，可粘贴 B 站 / 抖音 视频链接</p>}
       </div>
 
       {editable && (
@@ -64,7 +64,7 @@ export function TutorialList({ exercise, editable = false }: { exercise: Exercis
               添加
             </button>
           </div>
-          {err && <p className="text-[11px] text-accent">{err}</p>}
+          {err && <p className="text-[12px] text-accent">{err}</p>}
         </div>
       )}
     </div>

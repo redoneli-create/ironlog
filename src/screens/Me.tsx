@@ -82,7 +82,7 @@ export function MeScreen() {
               key={p.id}
               onClick={() => void patch({ theme: p.id, accent: undefined })}
               className={
-                "press rounded-xl border py-2 text-[11px] " + (theme === p.id ? "border-accent" : "border-line")
+                "press rounded-xl border py-2 text-[12px] " + (theme === p.id ? "border-accent" : "border-line")
               }
             >
               <span className="mx-auto mb-1 block h-5 w-5 rounded-full" style={{ background: p.accent }} />
@@ -125,11 +125,11 @@ export function MeScreen() {
             移除壁纸
           </Btn>
         </div>
-        <p className="mt-2 text-[11px] text-muted">取色取壁纸主色与最饱和色，自动设为强调色。</p>
+        <p className="mt-2 text-[12px] text-muted">取色取壁纸主色与最饱和色，自动设为强调色。</p>
 
         {settings?.wallpaper && (
           <div className="mt-3 rounded-xl bg-surface2 px-3 py-2">
-            <div className="flex items-center justify-between text-[11px] text-muted">
+            <div className="flex items-center justify-between text-[12px] text-muted">
               <span>壁纸不透明度</span>
               <span className="tabular-nums">{opPreview ?? settings.wallpaperOpacity ?? 35}%</span>
             </div>
@@ -154,7 +154,7 @@ export function MeScreen() {
 
       <Card>
         <SectionTitle>训练</SectionTitle>
-        <div className="mt-2 text-[11px] text-muted">默认组间休息</div>
+        <div className="mt-2 text-[12px] text-muted">默认组间休息</div>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {REST_OPTIONS.map((s) => (
             <Chip
@@ -168,17 +168,17 @@ export function MeScreen() {
         </div>
         {isNativeApp() && (
           <div className="mt-3 flex items-center justify-between rounded-xl bg-surface2 px-3 py-2">
-            <span className="text-[11px] text-muted">倒计时悬浮窗（切到其他 App 也能看到）</span>
+            <span className="text-[12px] text-muted">倒计时悬浮窗（切到其他 App 也能看到）</span>
             <button
               onClick={() => void requestOverlay()}
-              className="shrink-0 rounded-lg bg-accent/15 px-2.5 py-1 text-[11px] font-semibold text-accent"
+              className="shrink-0 rounded-lg bg-accent/15 px-2.5 py-1 text-[12px] font-semibold text-accent"
             >
               去授权
             </button>
           </div>
         )}
 
-        <div className="mt-3 text-[11px] text-muted">单位</div>
+        <div className="mt-3 text-[12px] text-muted">单位</div>
         <div className="mt-1.5 flex gap-1.5">
           {(["kg", "lb"] as const).map((u) => (
             <Chip key={u} active={(settings?.unit ?? "kg") === u} onClick={() => void patch({ unit: u })}>
@@ -189,7 +189,7 @@ export function MeScreen() {
       </Card>
 
       <Card>
-        <SectionTitle right={<span className="text-[11px] text-muted">{busy ? "处理中…" : msg}</span>}>
+        <SectionTitle right={<span className="text-[12px] text-muted">{busy ? "处理中…" : msg}</span>}>
           备份与导入
         </SectionTitle>
         <div className="mt-3 space-y-2">
@@ -232,7 +232,7 @@ export function MeScreen() {
             </div>
           </div>
         </div>
-        <p className="mt-2 text-[11px] text-muted">
+        <p className="mt-2 text-[12px] text-muted">
           列映射：日期 / 动作 / 重量 / 次数；Strong 取 Workout Name 与 Set Order，FitNotes 用日期分组。
         </p>
       </Card>
@@ -252,7 +252,7 @@ export function MeScreen() {
         </Btn>
       </Card>
 
-      <p className="pb-2 text-center text-[11px] text-muted">练 v0.3 · MIT · 数据仅存本机</p>
+      <p className="pb-2 text-center text-[12px] text-muted">练 v0.3 · MIT · 数据仅存本机</p>
     </div>
   );
 }
