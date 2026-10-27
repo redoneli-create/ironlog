@@ -98,6 +98,8 @@ export interface Settings {
   lastExportAt?: number;
   /** 备份提醒先静音到这个时间 */
   backupSnoozeUntil?: number;
+  /** 壁纸不透明度 0-100 */
+  wallpaperOpacity?: number;
 }
 
 export type DB = Dexie & {

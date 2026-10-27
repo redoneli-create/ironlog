@@ -1,4 +1,5 @@
 import { notifyRestDone } from "./notify";
+import { hideOverlay, showOverlay } from "./overlay";
 
 export type RestState = { endAt: number; totalMs: number; label: string } | null;
 
@@ -80,14 +81,23 @@ export function startRest(sec: number, label = "休息") {
   persist();
   schedule();
   emit();
+  void showOverlay(state.endAt, label);
 }
 
 export function extendRest(deltaSec: number) {
   if (!state) return;
-  state = { ...state, endAt: state.endAt + deltaSec * 1000, totalMs: state.totalMs + Math.max(0, deltaSec) * 1000 };
+  // 计时已归零时，从"现在"重新起算，而不是从旧的 endAt 累加（否则会吞掉归零后流逝的时间）
+  const base = Math.max(Date.now(), state.endAt);
+  const left = Math.max(0, state.endAt - Date.now());
+  state = {
+    ...state,
+    endAt: base + deltaSec * 1000,
+    totalMs: Math.max(1000, left + Math.abs(deltaSec) * 1000),
+  };
   persist();
   schedule();
   emit();
+  void showOverlay(state.endAt, state.label);
 }
 
 export function stopRest() {
@@ -96,6 +106,7 @@ export function stopRest() {
   state = null;
   persist();
   emit();
+  void hideOverlay();
 }
 
 export const restLeft = () => (state ? Math.max(0, state.endAt - Date.now()) : 0);

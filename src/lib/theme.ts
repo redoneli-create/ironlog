@@ -47,8 +47,11 @@ export function applyTheme(themeId: string, accentOverride?: string) {
     ?.setAttribute("content", p.mode === "dark" ? "#0b0f14" : "#f5f6f8");
 }
 
-export function applyWallpaper(dataUrl?: string) {
+export function applyWallpaper(dataUrl?: string, opacity?: number) {
   const el = document.documentElement;
+  const o = Math.min(100, Math.max(0, typeof opacity === "number" ? opacity : 35));
+  el.style.setProperty("--wallpaper-opacity", String(o / 100));
+  el.style.setProperty("--wallpaper-scrim", String(0.2 + 0.35 * (1 - o / 100)));
   if (dataUrl) {
     el.style.setProperty("--wallpaper", "url(" + dataUrl + ")");
     el.dataset.wallpaper = "on";

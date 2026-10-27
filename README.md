@@ -2,6 +2,9 @@
 
 # 练 · Lian
 
+[![下载 APK](https://img.shields.io/badge/APK-下载最新版-ff5a1f?style=flat-square)](https://github.com/redoneli-create/ironlog/releases/latest)
+[![Build APK](https://github.com/redoneli-create/ironlog/actions/workflows/android.yml/badge.svg)](https://github.com/redoneli-create/ironlog/actions/workflows/android.yml)
+
 离线优先的健身记录 PWA：React + TypeScript + Vite + Tailwind + Dexie。纯前端、无后端、可安装，数据只存本机。
 
 | 首页 | 训练中 |
@@ -32,6 +35,15 @@
 - **备份**：JSON 全量导出 / 导入；CSV 导出；FitNotes / Strong CSV 导入
 - **PWA**：可安装、离线可用（Workbox 预缓存）
 - **APK**：内置 Capacitor 工程，可打包成 Android 安装包（[docs/APK.md](docs/APK.md)）
+
+## 下载 APK（Android）
+
+直接装到手机，不用电脑、不用自己编译：
+
+**https://github.com/redoneli-create/ironlog/releases/latest** → 展开 **Assets** → 下载 `app-debug.apk` → 传到手机安装（允许「未知来源」）。
+
+> 这是 debug 签名包：自用/发给朋友都没问题，上架应用商店需要自己重新签名。
+> iOS 用户请用 PWA：部署后 Safari 打开 → 共享 → 添加到主屏幕。
 
 ## 快速开始
 

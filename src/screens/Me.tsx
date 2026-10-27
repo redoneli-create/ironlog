@@ -4,6 +4,7 @@ import { db, type Settings } from "../lib/db";
 import { PRESETS, applyTheme, applyWallpaper, extractPalette, presetOf } from "../lib/theme";
 import { clearAll, exportCSV, exportJSON, importCSV, importJSON, type CsvMap } from "../lib/backup";
 import { Btn, Card, Chip, SectionTitle } from "../components/ui";
+import { isNativeApp, requestOverlay } from "../lib/overlay";
 
 const REST_OPTIONS = [45, 60, 90, 120, 180, 240];
 
@@ -51,6 +52,7 @@ export function MeScreen() {
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [map, setMap] = useState<CsvMap>("strong");
+  const [opPreview, setOpPreview] = useState<number | null>(null);
 
   const patch = (p: Partial<Settings>) => db.settings.update("app", p);
 
@@ -105,7 +107,7 @@ export function MeScreen() {
                 const data = await shrink(f);
                 const pal = await extractPalette(data);
                 await patch({ wallpaper: data, accent: pal.accent });
-                applyWallpaper(data);
+                applyWallpaper(data, settings?.wallpaperOpacity ?? 35);
                 applyTheme(theme, pal.accent);
               })
             }
@@ -124,6 +126,30 @@ export function MeScreen() {
           </Btn>
         </div>
         <p className="mt-2 text-[11px] text-muted">取色取壁纸主色与最饱和色，自动设为强调色。</p>
+
+        {settings?.wallpaper && (
+          <div className="mt-3 rounded-xl bg-surface2 px-3 py-2">
+            <div className="flex items-center justify-between text-[11px] text-muted">
+              <span>壁纸不透明度</span>
+              <span className="tabular-nums">{opPreview ?? settings.wallpaperOpacity ?? 35}%</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={opPreview ?? settings.wallpaperOpacity ?? 35}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                setOpPreview(v);
+                applyWallpaper(settings.wallpaper, v);
+              }}
+              onPointerUp={() => void patch({ wallpaperOpacity: opPreview ?? settings.wallpaperOpacity ?? 35 })}
+              onKeyUp={() => void patch({ wallpaperOpacity: opPreview ?? settings.wallpaperOpacity ?? 35 })}
+              className="mt-1.5 h-6 w-full accent-[var(--accent)]"
+            />
+          </div>
+        )}
       </Card>
 
       <Card>
@@ -140,6 +166,18 @@ export function MeScreen() {
             </Chip>
           ))}
         </div>
+        {isNativeApp() && (
+          <div className="mt-3 flex items-center justify-between rounded-xl bg-surface2 px-3 py-2">
+            <span className="text-[11px] text-muted">倒计时悬浮窗（切到其他 App 也能看到）</span>
+            <button
+              onClick={() => void requestOverlay()}
+              className="shrink-0 rounded-lg bg-accent/15 px-2.5 py-1 text-[11px] font-semibold text-accent"
+            >
+              去授权
+            </button>
+          </div>
+        )}
+
         <div className="mt-3 text-[11px] text-muted">单位</div>
         <div className="mt-1.5 flex gap-1.5">
           {(["kg", "lb"] as const).map((u) => (
