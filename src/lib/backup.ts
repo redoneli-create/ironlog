@@ -40,7 +40,7 @@ export async function importJSON(file: File) {
   const text = await file.text();
   const parsed = JSON.parse(text) as Partial<Dump>;
   const app = (parsed as { app?: string }).app;
-  if ((app !== "ironlog" && app !== "lian") || !parsed.data) throw new Error("不是「练」的备份文件");
+  if ((app !== "ironlog" && app !== "lian") || !parsed.data) throw new Error("不是「予动」的备份文件");
   const d = parsed.data;
 
   await db.exercises.clear();

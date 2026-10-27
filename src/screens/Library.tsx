@@ -170,7 +170,7 @@ function Row({ e, onClick }: { e: Exercise; onClick: () => void }) {
 
 function Group(props: { title: string; count: number; open: boolean; onToggle: () => void; children: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-line bg-surface">
+    <div className="overflow-hidden rounded-3xl border border-line bg-surface">
       <button onClick={props.onToggle} className="flex w-full items-center justify-between px-3 py-3 text-left">
         <span className="text-sm font-medium">{props.title}</span>
         <span className="text-[12px] text-muted">
@@ -281,7 +281,7 @@ export function LibraryScreen() {
           </div>
 
           {filtered ? (
-            <div className="overflow-hidden rounded-2xl border border-line bg-surface">{renderRows(list)}</div>
+            <div className="overflow-hidden rounded-3xl border border-line bg-surface">{renderRows(list)}</div>
           ) : (
             <>
               <Group

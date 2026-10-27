@@ -105,14 +105,16 @@ function RoutineEditor(props: { routine: Routine | null; onClose: () => void }) 
                 </button>
               </div>
             </div>
-            <div className="mt-2 grid grid-cols-4 gap-2">
+            <div className="mt-2 grid grid-cols-3 gap-2">
               <Mini label="组" value={String(s.sets)} onChange={(v) => patch(i, { sets: Number(v) || 1 })} />
+              <Mini label="次" mode="text" value={s.reps} onChange={(v) => patch(i, { reps: v })} />
               <Mini
-                label="次"
-                mode="text"
-                value={s.reps}
-                onChange={(v) => patch(i, { reps: v })}
+                label="重量 kg"
+                value={s.weight ? String(s.weight) : ""}
+                onChange={(v) => patch(i, { weight: v ? Number(v) : undefined })}
               />
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
               <Mini label="休(s)" value={String(s.restSec)} onChange={(v) => patch(i, { restSec: Number(v) || 0 })} />
               <Mini label="Tempo" mode="text" value={s.tempo ?? ""} onChange={(v) => patch(i, { tempo: v || undefined })} />
             </div>
@@ -236,7 +238,7 @@ export function PlansScreen({ onStart }: { onStart: () => void }) {
   const programCard = (p: Program) => {
     const expanded = open === p.id;
     return (
-      <div key={p.id} className="overflow-hidden rounded-2xl border border-line bg-surface">
+      <div key={p.id} className="overflow-hidden rounded-3xl border border-line bg-surface">
         <button
           onClick={() => setOpen(expanded ? null : p.id)}
           className="press flex w-full items-baseline justify-between p-4 text-left"

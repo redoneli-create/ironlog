@@ -39,6 +39,8 @@ export interface RoutineExercise {
   reps: string;
   restSec: number;
   tempo?: string;
+  /** 计划里的目标重量（kg），开始训练时预填 */
+  weight?: number;
 }
 
 export interface Block {
@@ -136,7 +138,7 @@ export const localDate = (d: Date = new Date()) => {
 
 export const DEFAULT_SETTINGS: Settings = {
   key: "app",
-  theme: "iron",
+  theme: "sakura",
   restDefault: 120,
   unit: "kg",
   seeded: 0,

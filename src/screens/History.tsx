@@ -107,7 +107,7 @@ export function HistoryScreen() {
       {groups.map((g) => (
         <div key={g.month}>
           <div className="mb-1 px-1 text-[12px] text-muted">{g.month}</div>
-          <div className="overflow-hidden rounded-2xl border border-line bg-surface">
+          <div className="overflow-hidden rounded-3xl border border-line bg-surface">
             {g.items.map((s) => {
               const stats = sessionStats(s);
               return (
@@ -147,7 +147,7 @@ function TodaySummary({ sessions }: { sessions: Session[] }) {
   const todayMinutes = sessions.filter((s) => s.date === today).reduce((n, s) => n + sessionStats(s).minutes, 0);
   const weekMinutes = sessions.filter((s) => weekStart(s.date) === week).reduce((n, s) => n + sessionStats(s).minutes, 0);
   return (
-    <div className="rounded-2xl border border-line bg-surface px-4 py-3">
+    <div className="rounded-3xl border border-line bg-surface px-4 py-3">
       <div className="text-[12px] text-muted">今日训练</div>
       <div className="mt-0.5 flex items-baseline gap-1.5">
         <span className="text-2xl font-semibold tabular-nums">{todayMinutes}</span>

@@ -48,7 +48,15 @@ function SetRow(props: {
   unit: string;
   onToggle: (weight: number, reps: number) => void;
 }) {
-  const [w, setW] = useState(props.log ? String(props.log.weight) : props.ghost ? String(props.ghost.weight) : "");
+  const [w, setW] = useState(
+    props.log
+      ? String(props.log.weight)
+      : props.ghost
+        ? String(props.ghost.weight)
+        : props.slot.weight
+          ? String(props.slot.weight)
+          : "",
+  );
   const [r, setR] = useState(
     props.log ? String(props.log.reps) : props.ghost ? String(props.ghost.reps) : firstRep(props.slot.reps),
   );
@@ -115,7 +123,7 @@ function ExerciseCard(props: {
       : 0;
 
   return (
-    <div className="rounded-2xl border border-line bg-surface p-3">
+    <div className="rounded-3xl border border-line bg-surface p-3">
       <div className="flex items-baseline justify-between gap-2">
         <div className="min-w-0">
           <div className="truncate font-medium">{exerciseLabel(props.exercise)}</div>
@@ -135,7 +143,8 @@ function ExerciseCard(props: {
           </div>
         </div>
         <button onClick={props.onCycleRest} className="press shrink-0 rounded-lg bg-surface2 px-2 py-1 text-[12px] text-muted">
-          {props.slot.sets} 组 × {props.slot.reps} · 休 {props.restSec}s
+          {props.slot.sets} 组 × {props.slot.reps}
+          {props.slot.weight ? " · " + props.slot.weight + "kg" : ""} · 休 {props.restSec}s
         </button>
       </div>
 
@@ -362,7 +371,7 @@ function Picker() {
       )}
 
       {last && (
-        <div className="rounded-2xl border border-line bg-surface2 p-3">
+        <div className="rounded-3xl border border-line bg-surface2 p-3">
           <div className="text-[12px] text-muted">上次训练</div>
           <div className="mt-0.5 text-sm font-medium">
             {lastRoutine?.name ?? "训练"} · {last.logs.length} 组 · {sessionVolume(last.logs)} kg
@@ -373,7 +382,7 @@ function Picker() {
       {ordered.map((p) => {
         const expanded = open === p.id;
         return (
-          <div key={p.id} className="overflow-hidden rounded-2xl border border-line bg-surface">
+          <div key={p.id} className="overflow-hidden rounded-3xl border border-line bg-surface">
             <button
               onClick={() => setOpen(expanded ? null : p.id)}
               className="press flex w-full items-baseline justify-between p-4 text-left"
@@ -410,6 +419,8 @@ function Picker() {
           </div>
         );
       })}
+
+      <p className="pt-2 text-center text-[11px] tracking-[0.18em] text-muted/70">BY REDONE</p>
     </div>
   );
 }

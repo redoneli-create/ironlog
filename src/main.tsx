@@ -114,7 +114,7 @@ function App() {
     <div className="mx-auto flex min-h-full w-full max-w-md flex-col">
       <header className="sticky top-0 z-10 flex items-center justify-between bg-bg/80 px-4 py-3 backdrop-blur">
         <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-black leading-none tracking-tight">练</span>
+          <span className="font-brand text-2xl leading-none tracking-[0.02em]">予动</span>
           <span className="text-[12px] text-muted">离线训练记录</span>
         </div>
         <span className="text-[12px] text-muted tabular-nums">{localDate()}</span>

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">练</string>
-    <string name="title_activity_main">练</string>
+    <string name="app_name">予动</string>
+    <string name="title_activity_main">予动</string>
     <string name="package_name">app.lian.fit</string>
     <string name="custom_url_scheme">app.lian.fit</string>
 </resources>

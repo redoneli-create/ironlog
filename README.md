@@ -1,6 +1,6 @@
 <img src="public/icon-192.png" width="72" align="right" alt="练" />
 
-# 练 · Lian
+# 予动 · Yudong
 
 [![下载 APK](https://img.shields.io/badge/APK-下载最新版-ff5a1f?style=flat-square)](https://github.com/redoneli-create/ironlog/releases/latest)
 [![Build APK](https://github.com/redoneli-create/ironlog/actions/workflows/android.yml/badge.svg)](https://github.com/redoneli-create/ironlog/actions/workflows/android.yml)

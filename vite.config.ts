@@ -14,8 +14,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["apple-touch-icon.png"],
       manifest: {
-        name: "练 · 训练记录",
-        short_name: "练",
+        name: "予动 · 训练记录",
+        short_name: "予动",
         description: "离线优先的健身记录 PWA：动作教程、计划、组间计时、体重趋势、全量导出",
         theme_color: "#0b0f14",
         background_color: "#0b0f14",

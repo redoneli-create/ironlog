@@ -89,7 +89,7 @@ function Muscles({ regions, onPick }: { regions: Region[]; onPick: (p: string) =
 export function BodyMap({ onPick }: { onPick: (part: string) => void }) {
   const parts = Array.from(new Set([...FRONT, ...BACK].map((r) => r.part)));
   return (
-    <div className="rounded-2xl border border-line bg-surface p-3">
+    <div className="rounded-3xl border border-line bg-surface p-3">
       <svg viewBox="0 0 320 300" className="w-full">
         <Silhouette cx={80} />
         <Muscles regions={FRONT} onPick={onPick} />

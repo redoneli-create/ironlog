@@ -2,7 +2,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { pushBack } from "../lib/backstack";
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={"rounded-2xl border border-line bg-surface p-4 " + className}>{children}</div>;
+  return <div className={"rounded-3xl border border-line bg-surface p-4 " + className}>{children}</div>;
 }
 
 export function SectionTitle({ children, right }: { children: ReactNode; right?: ReactNode }) {

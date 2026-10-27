@@ -252,7 +252,8 @@ export function MeScreen() {
         </Btn>
       </Card>
 
-      <p className="pb-2 text-center text-[12px] text-muted">练 v0.3 · MIT · 数据仅存本机</p>
+      <p className="pb-2 text-center text-[12px] text-muted">予动 v0.7 · MIT · 数据仅存本机</p>
+      <p className="pb-6 text-center text-[12px] tracking-[0.18em] text-muted/70">BY REDONE</p>
     </div>
   );
 }

@@ -24,7 +24,7 @@ export function RestBar() {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto max-w-md px-3 pb-[calc(4rem+env(safe-area-inset-bottom))]">
-      <div className="pointer-events-auto rounded-2xl border border-line bg-surface/95 p-3 shadow-xl backdrop-blur">
+      <div className="pointer-events-auto rounded-3xl border border-line bg-surface/95 p-3 shadow-xl backdrop-blur">
         <div className="flex items-center gap-3">
           <div className={"w-16 text-2xl font-bold tabular-nums " + (done ? "text-accent" : "")}>
             {done ? "0:00" : mmss(left)}
