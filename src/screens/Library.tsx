@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { BODY_PART_ZH, BODY_PARTS, db, equipmentZh, exerciseLabel, muscleZh, uid, type Exercise } from "../lib/db";
 import { COMMON_RANK } from "../data/common";
+import { MUSCLES, matchesMuscle } from "../data/muscles";
 import { epley, prByExercise } from "../lib/metrics";
 import { toast } from "../lib/toast";
 import { Btn, Chip, Empty, Field, Sheet, TextInput } from "../components/ui";
@@ -113,12 +114,17 @@ function Create({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <Sheet open onClose={onClose} title="自定义动作">
+    <Sheet
+      open
+      onClose={onClose}
+      title="自定义动作"
+      footer={<Btn onClick={() => void save()} disabled={!zh.trim()}>保存动作</Btn>}
+    >
       <div className="space-y-2">
         <Field label="动作名（中文，必填）">
           <TextInput value={zh} onChange={setZh} placeholder="例如 绳索 Y 字举" />
         </Field>
-        <Field label="英文名（可选，留空不影响使用）">
+        <Field label="英文名（可选）">
           <TextInput value={name} onChange={setName} placeholder="e.g. cable y-raise" />
         </Field>
         <Field label="部位">
@@ -139,9 +145,6 @@ function Create({ onClose }: { onClose: () => void }) {
           </Field>
         </div>
       </div>
-      <Btn className="mt-4" onClick={() => void save()} disabled={!zh.trim()}>
-        保存动作
-      </Btn>
     </Sheet>
   );
 }
@@ -160,45 +163,31 @@ function Row({ e, onClick }: { e: Exercise; onClick: () => void }) {
           )}
         </span>
         <span className="block truncate text-[12px] text-muted">
-          {e.zh ? e.name : [e.equipment, e.target].filter(Boolean).join(" · ")}
+          {e.zh ? e.name : [equipmentZh(e.equipment), e.target].filter(Boolean).join(" · ")}
         </span>
       </span>
-      <span className="ml-2 shrink-0 text-[12px] text-muted">{BODY_PART_ZH[e.bodyPart] ?? e.bodyPart}</span>
+      <span className="ml-2 shrink-0 text-[11px] text-muted">{BODY_PART_ZH[e.bodyPart] ?? e.bodyPart}</span>
     </button>
-  );
-}
-
-function Group(props: { title: string; count: number; open: boolean; onToggle: () => void; children: React.ReactNode }) {
-  return (
-    <div className="overflow-hidden rounded-3xl border border-line bg-surface">
-      <button onClick={props.onToggle} className="flex w-full items-center justify-between px-3 py-3 text-left">
-        <span className="text-sm font-medium">{props.title}</span>
-        <span className="text-[12px] text-muted">
-          {props.count} 个 · {props.open ? "收起" : "展开"}
-        </span>
-      </button>
-      {props.open && <div>{props.children}</div>}
-    </div>
   );
 }
 
 export function LibraryScreen() {
   const [q, setQ] = useState("");
   const [part, setPart] = useState<string | null>(null);
+  const [muscle, setMuscle] = useState<string | null>(null);
   const [customOnly, setCustomOnly] = useState(false);
   const [commonOnly, setCommonOnly] = useState(false);
   const [limit, setLimit] = useState(60);
   const [creating, setCreating] = useState(false);
   const [detail, setDetail] = useState<string | null>(null);
   const [mode, setMode] = useState<"list" | "map">("list");
-  const [openMine, setOpenMine] = useState(true);
-  const [openOfficial, setOpenOfficial] = useState(true);
   const all = useLiveQuery(() => db.exercises.toArray(), []);
 
   const list = useMemo(() => {
     const kw = q.trim().toLowerCase();
     return (all ?? [])
       .filter((e) => !part || e.bodyPart === part)
+      .filter((e) => !muscle || matchesMuscle(e, muscle))
       .filter((e) => !customOnly || e.isCustom)
       .filter((e) => !commonOnly || COMMON_RANK.has(e.id))
       .filter(
@@ -217,98 +206,92 @@ export function LibraryScreen() {
         if (a.isCustom !== b.isCustom) return a.isCustom ? -1 : 1;
         return (a.zh ?? a.name).localeCompare(b.zh ?? b.name, "zh");
       });
-  }, [all, q, part, customOnly, commonOnly]);
+  }, [all, q, part, muscle, customOnly, commonOnly]);
 
-  const mine = list.filter((e) => e.isCustom);
-  const official = list.filter((e) => !e.isCustom);
-  const filtered = !!(q.trim() || part || commonOnly || customOnly);
+  const partMuscles = MUSCLES.filter((m) => !part || m.part === part);
 
-  const renderRows = (rows: Exercise[], emptyText?: string) => (
-    <>
-      {rows.slice(0, limit).map((e) => (
-        <Row key={e.id} e={e} onClick={() => setDetail(e.id)} />
-      ))}
-      {!rows.length && emptyText ? <Empty text={emptyText} /> : null}
-    </>
-  );
+  const rail = [
+    { key: "all", label: "全部", active: !part && !muscle && !customOnly && !commonOnly, onClick: () => { setPart(null); setMuscle(null); setCustomOnly(false); setCommonOnly(false); } },
+    { key: "common", label: "常用", active: commonOnly, onClick: () => setCommonOnly(!commonOnly) },
+    { key: "mine", label: "我的", active: customOnly, onClick: () => setCustomOnly(!customOnly) },
+    ...BODY_PARTS.map((p) => ({
+      key: p,
+      label: BODY_PART_ZH[p],
+      active: part === p,
+      onClick: () => {
+        setPart(part === p ? null : p);
+        setMuscle(null);
+      },
+    })),
+  ];
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-1.5">
-        <Chip active={mode === "list"} onClick={() => setMode("list")}>
-          动作库
-        </Chip>
-        <Chip active={mode === "map"} onClick={() => setMode("map")}>
-          肌肉图
-        </Chip>
+      <div className="flex items-center justify-between">
+        <div className="flex gap-1.5">
+          <Chip active={mode === "list"} onClick={() => setMode("list")}>动作库</Chip>
+          <Chip active={mode === "map"} onClick={() => setMode("map")}>肌肉图</Chip>
+        </div>
+        <button
+          onClick={() => setCreating(true)}
+          className="press rounded-xl bg-accent px-3 py-1.5 text-sm font-semibold text-onaccent"
+        >
+          + 自建
+        </button>
       </div>
 
       {mode === "map" ? (
         <BodyMap
-          onPick={(p) => {
-            setPart(p);
+          active={muscle}
+          onPick={(id) => {
+            setMuscle(id);
+            const m = MUSCLES.find((x) => x.id === id);
+            if (m) setPart(m.part);
             setMode("list");
-            setOpenOfficial(true);
           }}
         />
       ) : (
-        <>
-          <div className="flex gap-2">
-            <TextInput value={q} onChange={setQ} placeholder={"搜索动作（共 " + (all?.length ?? 0) + " 个）"} />
-            <button
-              onClick={() => setCreating(true)}
-              className="press shrink-0 rounded-xl bg-accent px-3 text-sm font-semibold text-onaccent"
-            >
-              +
-            </button>
-          </div>
-
-          <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1">
-            <Chip active={!part && !customOnly && !commonOnly} onClick={() => { setPart(null); setCustomOnly(false); setCommonOnly(false); }}>
-              全部
-            </Chip>
-            <Chip active={commonOnly} onClick={() => setCommonOnly(!commonOnly)}>
-              常用
-            </Chip>
-            <Chip active={customOnly} onClick={() => setCustomOnly(!customOnly)}>
-              我的动作
-            </Chip>
-            {BODY_PARTS.map((p) => (
-              <Chip key={p} active={part === p} onClick={() => setPart(part === p ? null : p)}>
-                {BODY_PART_ZH[p]}
-              </Chip>
+        <div className="flex gap-2">
+          <aside className="no-scrollbar w-[62px] shrink-0 space-y-1 overflow-y-auto pb-2">
+            {rail.map((r) => (
+              <button
+                key={r.key}
+                onClick={r.onClick}
+                className={
+                  "press w-full rounded-xl py-2 text-[12px] " +
+                  (r.active ? "bg-accent text-onaccent" : "bg-surface2 text-muted")
+                }
+              >
+                {r.label}
+              </button>
             ))}
+          </aside>
+
+          <div className="min-w-0 flex-1 space-y-2">
+            <TextInput value={q} onChange={setQ} placeholder={"搜索动作（" + (all?.length ?? 0) + "）"} />
+
+            <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1">
+              {partMuscles.map((m) => (
+                <Chip key={m.id} active={muscle === m.id} onClick={() => setMuscle(muscle === m.id ? null : m.id)}>
+                  {m.zh}
+                </Chip>
+              ))}
+            </div>
+
+            <div className="overflow-hidden rounded-3xl border border-line bg-surface">
+              {list.slice(0, limit).map((e) => (
+                <Row key={e.id} e={e} onClick={() => setDetail(e.id)} />
+              ))}
+              {!list.length && <Empty text="没有匹配动作" />}
+            </div>
+
+            {list.length > limit && (
+              <Btn kind="ghost" onClick={() => setLimit(limit + 80)}>
+                显示更多（{list.length - limit}）
+              </Btn>
+            )}
           </div>
-
-          {filtered ? (
-            <div className="overflow-hidden rounded-3xl border border-line bg-surface">{renderRows(list)}</div>
-          ) : (
-            <>
-              <Group
-                title="我的动作"
-                count={mine.length}
-                open={openMine}
-                onToggle={() => setOpenMine(!openMine)}
-              >
-                {renderRows(mine, "还没有自建动作，点右上角 + 添加")}
-              </Group>
-              <Group
-                title="官方动作库"
-                count={official.length}
-                open={openOfficial}
-                onToggle={() => setOpenOfficial(!openOfficial)}
-              >
-                {renderRows(official, "没有匹配动作")}
-              </Group>
-            </>
-          )}
-
-          {list.length > limit && (
-            <Btn kind="ghost" onClick={() => setLimit(limit + 80)}>
-              显示更多（{list.length - limit}）
-            </Btn>
-          )}
-        </>
+        </div>
       )}
 
       {creating && <Create onClose={() => setCreating(false)} />}
