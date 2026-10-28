@@ -331,8 +331,12 @@ function Picker() {
   const signal = homeSignal(sessions ?? [], localDate());
   const todayKey = localDate();
   const dowKey = String(((new Date().getDay() + 6) % 7) + 1);
-  const scheduledId = settings?.schedule?.[todayKey] ?? settings?.weeklySchedule?.[dowKey];
-  const scheduled = scheduledId ? byId.get(scheduledId) : undefined;
+  const rawToday = settings?.schedule?.[todayKey];
+  const todayIds = [
+    ...(Array.isArray(rawToday) ? rawToday : rawToday ? [rawToday as unknown as string] : []),
+    ...(settings?.weeklySchedule?.[dowKey] ? [settings.weeklySchedule[dowKey]] : []),
+  ].filter((v, i, a) => !!v && a.indexOf(v) === i);
+  const scheduledList = todayIds.map((id) => byId.get(id)).filter(Boolean);
   const ordered = [...(programs ?? [])].sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9));
   const finished = (sessions ?? []).filter((s) => s.endedAt);
   const stale = finished.length >= 3 && (!settings?.lastExportAt || Date.now() - settings.lastExportAt > 14 * 864e5);
@@ -347,20 +351,24 @@ function Picker() {
         <div className="mt-0.5 text-xs text-muted">{signal.detail}</div>
       </Card>
 
-      {scheduled && (
+      {!!scheduledList.length && (
         <Card className="border-accent/30">
           <div className="text-[12px] text-muted">今天安排</div>
-          <div className="mt-0.5 text-lg font-semibold">{scheduled.name}</div>
-          <div className="mt-0.5 text-[12px] text-muted">{plannedSets(scheduled)} 组 · 来自日历</div>
-          <button
-            onClick={() => {
-              void startSession(undefined, scheduled.id);
-              void ensureNotifyPermission();
-            }}
-            className="press mt-2 w-full rounded-xl bg-accent py-3 text-sm font-semibold text-onaccent"
-          >
-            开始
-          </button>
+          <div className="mt-1 space-y-1.5">
+            {scheduledList.map((r) => (
+              <button
+                key={r!.id}
+                onClick={() => {
+                  void startSession(undefined, r!.id);
+                  void ensureNotifyPermission();
+                }}
+                className="flex w-full items-center justify-between rounded-xl bg-surface2 px-3 py-2.5 text-left"
+              >
+                <span className="text-sm">{r!.name}</span>
+                <span className="text-[11px] text-muted tabular-nums">{plannedSets(r!)} 组 · 开始</span>
+              </button>
+            ))}
+          </div>
         </Card>
       )}
 

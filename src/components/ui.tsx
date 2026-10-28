@@ -94,9 +94,20 @@ export function Sheet(props: {
   children: ReactNode;
   /** 固定在底部、始终可见的操作区 */
   footer?: ReactNode;
+  /** full: 占屏 92%，适合编辑器 */
+  size?: "auto" | "full";
 }) {
   const closeRef = useRef(props.onClose);
   closeRef.current = props.onClose;
+
+  useEffect(() => {
+    if (!props.open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [props.open]);
 
   useEffect(() => {
     if (!props.open) return;
@@ -110,16 +121,24 @@ export function Sheet(props: {
   return (
     <div className="fixed inset-0 z-40 flex items-end bg-black/55" onClick={props.onClose}>
       <div
-        className="pad-safe max-h-[85vh] w-full overflow-y-auto rounded-t-2xl border-t border-line bg-surface p-4"
+        className={
+          "flex w-full flex-col overflow-hidden rounded-t-3xl border-t border-line bg-surface " +
+          (props.size === "full" ? "h-[92vh]" : "max-h-[88vh]")
+        }
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-3 flex items-center justify-between">
+        <div className="flex shrink-0 items-center justify-between px-4 pb-2 pt-3">
           <h3 className="text-base font-semibold">{props.title ?? ""}</h3>
           <button onClick={props.onClose} className="px-2 py-1 text-xs text-muted">
             关闭
           </button>
         </div>
-        {props.children}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4">{props.children}</div>
+        {props.footer && (
+          <div className="shrink-0 border-t border-line bg-surface px-4 pb-[calc(0.85rem+env(safe-area-inset-bottom))] pt-3">
+            {props.footer}
+          </div>
+        )}
       </div>
     </div>
   );

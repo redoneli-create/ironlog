@@ -109,8 +109,8 @@ export interface Settings {
   backupSnoozeUntil?: number;
   /** 壁纸不透明度 0-100 */
   wallpaperOpacity?: number;
-  /** 日历排期：日期 YYYY-MM-DD → 例程 id */
-  schedule?: Record<string, string>;
+  /** 日历排期：日期 YYYY-MM-DD → 例程 id 列表 */
+  schedule?: Record<string, string[]>;
   /** 每周固定安排：1-7（周一=1）→ 例程 id */
   weeklySchedule?: Record<string, string>;
 }

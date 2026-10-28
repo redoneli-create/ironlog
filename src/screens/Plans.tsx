@@ -82,6 +82,7 @@ function RoutineEditor(props: { routine: Routine | null; onClose: () => void }) 
       open
       onClose={props.onClose}
       title={props.routine ? "编辑例程" : "新建例程"}
+      size="full"
       footer={
         <div className="space-y-2">
           <Btn onClick={() => void save()} disabled={!slots.length}>
@@ -176,6 +177,7 @@ function ProgramEditor(props: { program: Program | null; routines: Routine[]; on
       open
       onClose={props.onClose}
       title={props.program ? "编辑计划" : "新建计划"}
+      size="full"
       footer={
         <div className="space-y-2">
           <Btn onClick={() => void save()}>保存计划</Btn>
@@ -315,9 +317,22 @@ export function PlansScreen({ onStart }: { onStart: () => void }) {
                 </div>
               );
             })}
-            <button onClick={() => setProgEdit(p)} className="w-full py-2 text-[12px] text-muted">
-              管理计划
-            </button>
+            <div className="flex gap-2">
+              <button onClick={() => setProgEdit(p)} className="flex-1 rounded-xl bg-surface2 py-2 text-[12px] text-muted">
+                管理计划
+              </button>
+              <button
+                onClick={() => {
+                  void db.programs.delete(p.id).then(() => {
+                    setOpen(null);
+                    toast("已删除计划「" + p.name + "」", "撤销", () => void db.programs.put(p));
+                  });
+                }}
+                className="rounded-xl border border-line px-3 py-2 text-[12px] text-muted"
+              >
+                删除
+              </button>
+            </div>
           </div>
         )}
       </div>
