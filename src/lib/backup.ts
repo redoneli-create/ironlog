@@ -1,6 +1,24 @@
+import { Capacitor } from "@capacitor/core";
+import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
 import { db, localDate, uid, type Exercise, type Session, type SetLog } from "./db";
 
 const stamp = () => new Date().toISOString().slice(0, 10);
+
+/** 导出：浏览器走下载，App 内写文件后调系统分享面板保存/发送 */
+export async function saveExport(content: string, name: string, type: string) {
+  if (Capacitor.isNativePlatform()) {
+    const res = await Filesystem.writeFile({
+      path: name,
+      data: content,
+      directory: Directory.Cache,
+      encoding: Encoding.UTF8,
+    });
+    await Share.share({ title: name, url: res.uri, dialogTitle: "保存或发送 " + name });
+    return;
+  }
+  download(content, name, type);
+}
 
 export function download(content: string, name: string, type: string) {
   const blob = new Blob([content], { type });
@@ -30,7 +48,7 @@ export async function dumpAll() {
 
 export async function exportJSON() {
   const dump = await dumpAll();
-  download(JSON.stringify(dump, null, 2), "lian-" + stamp() + ".json", "application/json");
+  await saveExport(JSON.stringify(dump, null, 2), "yudong-" + stamp() + ".json", "application/json");
   await db.settings.update("app", { lastExportAt: Date.now(), backupSnoozeUntil: undefined });
 }
 
@@ -95,7 +113,7 @@ export async function exportCSV() {
       ]);
     }
   }
-  download(rows.map((r) => r.map(esc).join(",")).join("\n"), "ironlog-" + stamp() + ".csv", "text/csv;charset=utf-8");
+  await saveExport(rows.map((r) => r.map(esc).join(",")).join("\n"), "yudong-" + stamp() + ".csv", "text/csv;charset=utf-8");
 }
 
 function parseCSV(text: string): string[][] {

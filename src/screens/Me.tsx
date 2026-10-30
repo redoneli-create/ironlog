@@ -265,6 +265,9 @@ export function MeScreen() {
         <p className="mt-2 text-[12px] text-muted">
           列映射：日期 / 动作 / 重量 / 次数；Strong 取 Workout Name 与 Set Order，FitNotes 用日期分组。
         </p>
+        <p className="mt-2 text-[12px] text-muted">
+          导出位置：浏览器版保存到「下载」文件夹（文件名为 yudong-日期.json）；App 版会弹出系统分享面板，选「保存到文件」或发给自己。
+        </p>
       </Card>
 
       <Card>
