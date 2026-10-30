@@ -7,8 +7,8 @@ android {
         applicationId "app.lian.fit"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 8
-        versionName "0.9.3"
+        versionCode 9
+        versionName "0.9.4"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +16,24 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // 固定签名：这样以后新版本可以「覆盖安装」，数据保留
+    // 密钥随仓库公开，仅适用于自己分发；上架商店请改为 GitHub Secrets 注入
+    signingConfigs {
+        stable {
+            storeFile rootProject.file("app/yudong.p12")
+            storePassword "yudong2026"
+            keyAlias "yudong"
+            keyPassword "yudong2026"
+            storeType "PKCS12"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig signingConfigs.stable
+        }
         release {
+            signingConfig signingConfigs.stable
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

@@ -65,6 +65,7 @@ npm run preview
 3. **PWABuilder（TWA）**：需要已部署的 HTTPS 地址，无需本地环境
 
 > APK 与浏览器是两套独立存储：切换到 APK 前，先在网页版「我的 → 导出全部数据（JSON）」，装好后导入。
+> 所有版本使用同一把固定签名密钥，**新版可覆盖安装、数据保留**（从 v0.9.3 及更早升级需先卸载一次，详见 docs/APK.md）。
 
 细节见 [docs/APK.md](docs/APK.md)。
 

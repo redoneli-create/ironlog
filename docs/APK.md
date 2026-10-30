@@ -82,6 +82,25 @@ keytool -genkey -v -keystore lian.keystore -alias lian -keyalg RSA -keysize 2048
 在 `android/app/build.gradle` 里加 `signingConfigs`，或用 Android Studio 的
 `Build → Generate Signed Bundle / APK`。
 
+## 版本更新与签名（重要）
+
+从 v0.9.4 起，所有包都用仓库里的固定密钥 `android/app/yudong.p12` 签名，
+所以**以后新版直接覆盖安装即可，数据保留**，不需要卸载。
+
+两个例外：
+
+1. **老版本（v0.9.3 及更早）是 CI 临时生成的调试签名**，与固定签名不一致。从旧版升级到 v0.9.4+ 需要先卸载一次 —— 卸载会清空数据，所以升级前务必先导出 JSON。
+2. 只要包名（`app.lian.fit`）不变，之后所有版本都能无缝覆盖升级。
+
+> 签名密钥提交在仓库里，方便自助出包；这也意味着拿到仓库的人可以用同签名打包。
+> 如果要上应用商店或想更安全，把这把密钥换成 GitHub Secrets 注入：
+
+```bash
+# 生成后保存好，切勿丢失（丢了就无法覆盖升级）
+keytool -genkeypair -keystore yudong.p12 -alias yudong -keyalg RSA -keysize 2048 -validity 10000
+base64 -w 0 yudong.p12 > yudong.b64   # 放进 Secrets: KEYSTORE_BASE64
+```
+
 ## 常见问题
 
 - **安装被拦截**：手机设置里允许该来源安装；小米/华为需关闭「纯净模式」。
