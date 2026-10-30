@@ -81,6 +81,12 @@ JSON 备份包含以上全部表（含自建动作的教程链接）；CSV 导�
 python scripts/zh_names.py
 ```
 
+## 图片与素材
+
+- 内置壁纸（`public/wallpapers/`，5 张）为本项目原创生成，随项目以 MIT 授权，可商用。
+- 应用内图标为手写 SVG（`src/components/Icons.tsx`），同样 MIT。
+- 如需换成真实照片，直接替换 `public/wallpapers/` 下同名文件即可（请自行确认所用图片的商用授权）。
+
 ## 动作数据与许可边界
 
 - 动作元数据（名称、部位、器械、目标肌群、协同肌群）来自 [hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset)，数据文件为 MIT，© Hasan Emir Yıldırım。

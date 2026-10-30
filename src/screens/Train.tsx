@@ -29,6 +29,7 @@ import { estimateKcal, latestWeight } from "../lib/calories";
 import { toast } from "../lib/toast";
 import { Card, Sheet } from "../components/ui";
 import { RestBar } from "../components/RestBar";
+import { Icon } from "../components/Icons";
 import { TutorialList } from "../components/Tutorials";
 
 const REST_STEPS = [0, 30, 45, 60, 90, 120, 150, 180, 240, 300];
@@ -417,7 +418,10 @@ function Picker() {
               className="press flex w-full items-baseline justify-between p-4 text-left"
             >
               <div>
-                <div className="font-semibold">{p.name}</div>
+                <div className="flex items-center gap-1.5 font-semibold">
+                  <Icon name="dumbbell" size={16} className="text-accent" />
+                  {p.name}
+                </div>
                 <div className="mt-0.5 text-[12px] text-muted">{p.note}</div>
               </div>
               <div className="shrink-0 text-[12px] text-muted">

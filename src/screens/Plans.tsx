@@ -15,6 +15,7 @@ import { toast } from "../lib/toast";
 import { Btn, Card, Chip, Empty, Field, Sheet, TextInput } from "../components/ui";
 import { ExercisePicker } from "../components/ExercisePicker";
 import { CalendarScreen } from "./Calendar";
+import { Icon } from "../components/Icons";
 
 type Slot = RoutineExercise & { merge?: boolean };
 
@@ -346,7 +347,8 @@ export function PlansScreen({ onStart }: { onStart: () => void }) {
           onClick={() => setGroups((g) => ({ ...g, [key]: !g[key] }))}
           className="flex w-full items-center justify-between px-1 py-1"
         >
-          <span className="text-[12px] font-medium text-muted">
+          <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-muted">
+            <Icon name={key === "female" ? "sparkle" : key === "mine" ? "user" : "dumbbell"} size={15} />
             {title} · {list.length}
           </span>
           <span className="text-[12px] text-muted">{groups[key] ? "收起" : "展开"}</span>

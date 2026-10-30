@@ -7,10 +7,15 @@ export interface ThemePreset {
 
 export const PRESETS: ThemePreset[] = [
   { id: "sakura", name: "樱粉", mode: "light", accent: "#c65c7c" },
-  { id: "cream", name: "奶油", mode: "light", accent: "#c08f63" },
+  { id: "peach", name: "蜜桃", mode: "light", accent: "#cd7f63" },
+  { id: "cream", name: "奶油", mode: "light", accent: "#b98f5e" },
+  { id: "lilac", name: "藕荷", mode: "light", accent: "#a07cb8" },
   { id: "mist", name: "薄雾", mode: "light", accent: "#7e97c4" },
+  { id: "sage", name: "鼠尾草", mode: "light", accent: "#6f9a83" },
   { id: "iron", name: "墨黑", mode: "dark", accent: "#c9cdd4" },
-  { id: "night", name: "夜色", mode: "dark", accent: "#c65c7c" },
+  { id: "night", name: "夜色", mode: "dark", accent: "#d97a95" },
+  { id: "forest", name: "深松", mode: "dark", accent: "#8fb08d" },
+  { id: "cocoa", name: "可可", mode: "dark", accent: "#c49a72" },
 ];
 
 export const presetOf = (id: string) => PRESETS.find((p) => p.id === id) ?? PRESETS[0];

@@ -5,8 +5,17 @@ import { PRESETS, applyTheme, applyWallpaper, extractPalette, presetOf } from ".
 import { clearAll, exportCSV, exportJSON, importCSV, importJSON, type CsvMap } from "../lib/backup";
 import { Btn, Card, Chip, SectionTitle } from "../components/ui";
 import { isNativeApp, requestOverlay } from "../lib/overlay";
+import { Icon } from "../components/Icons";
 
 const REST_OPTIONS = [45, 60, 90, 120, 180, 240];
+
+const WALLPAPERS = [
+  { url: "/wallpapers/sakura.jpg", accent: "#c65c7c" },
+  { url: "/wallpapers/cream.jpg", accent: "#b98f5e" },
+  { url: "/wallpapers/lilac.jpg", accent: "#a07cb8" },
+  { url: "/wallpapers/mist.jpg", accent: "#7e97c4" },
+  { url: "/wallpapers/night.jpg", accent: "#d97a95" },
+];
 
 function FileBtn(props: { accept: string; onFile: (f: File) => void; children: ReactNode }) {
   return (
@@ -69,13 +78,19 @@ export function MeScreen() {
     }
   };
 
+  const useWallpaper = async (url: string, accent: string) => {
+    await patch({ wallpaper: url, accent });
+    applyWallpaper(url, settings?.wallpaperOpacity ?? 35);
+    setMsg("壁纸已应用");
+  };
+
   const theme = settings?.theme ?? "iron";
   const accent = settings?.accent ?? presetOf(theme).accent;
 
   return (
     <div className="space-y-3">
       <Card>
-        <SectionTitle>主题</SectionTitle>
+        <SectionTitle><span className="inline-flex items-center gap-1.5"><Icon name="palette" />主题</span></SectionTitle>
         <div className="mt-3 grid grid-cols-5 gap-2">
           {PRESETS.map((p) => (
             <button
@@ -125,6 +140,21 @@ export function MeScreen() {
             移除壁纸
           </Btn>
         </div>
+        <div className="mt-3 text-[11px] text-muted">预置壁纸</div>
+        <div className="mt-1.5 flex gap-2 overflow-x-auto pb-1">
+          {WALLPAPERS.map((w) => (
+            <button
+              key={w.url}
+              onClick={() => void useWallpaper(w.url, w.accent)}
+              className={
+                "shrink-0 overflow-hidden rounded-xl border-2 " +
+                (settings?.wallpaper === w.url ? "border-accent" : "border-transparent")
+              }
+            >
+              <img src={w.url} alt="" className="h-[76px] w-[52px] object-cover" />
+            </button>
+          ))}
+        </div>
         <p className="mt-2 text-[12px] text-muted">取色取壁纸主色与最饱和色，自动设为强调色。</p>
 
         {settings?.wallpaper && (
@@ -153,7 +183,7 @@ export function MeScreen() {
       </Card>
 
       <Card>
-        <SectionTitle>训练</SectionTitle>
+        <SectionTitle><span className="inline-flex items-center gap-1.5"><Icon name="dumbbell" />训练</span></SectionTitle>
         <div className="mt-2 text-[12px] text-muted">默认组间休息</div>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {REST_OPTIONS.map((s) => (
@@ -190,7 +220,7 @@ export function MeScreen() {
 
       <Card>
         <SectionTitle right={<span className="text-[12px] text-muted">{busy ? "处理中…" : msg}</span>}>
-          备份与导入
+          <span className="inline-flex items-center gap-1.5"><Icon name="database" />备份与导入</span>
         </SectionTitle>
         <div className="mt-3 space-y-2">
           <Btn onClick={() => void run("导出 JSON", exportJSON)}>导出全部数据（JSON）</Btn>
