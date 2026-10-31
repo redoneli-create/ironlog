@@ -1,4 +1,4 @@
-package app.lian.fit;
+package app.yudong.fit;
 
 import android.app.Service;
 import android.content.Intent;

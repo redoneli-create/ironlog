@@ -1,4 +1,4 @@
-package app.lian.fit;
+package app.yudong.fit;
 
 import android.os.Bundle;
 

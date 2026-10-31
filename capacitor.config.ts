@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "app.lian.fit",
+  appId: "app.yudong.fit",
   appName: "予动",
   webDir: "dist",
   android: {

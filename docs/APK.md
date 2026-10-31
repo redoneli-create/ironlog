@@ -82,6 +82,14 @@ keytool -genkey -v -keystore lian.keystore -alias lian -keyalg RSA -keysize 2048
 在 `android/app/build.gradle` 里加 `signingConfigs`，或用 Android Studio 的
 `Build → Generate Signed Bundle / APK`。
 
+## 包名（v0.9.5 起）
+
+包名已从 `app.lian.fit` 改为 **`app.yudong.fit`**（与「予动」对应）。
+
+- 新包会被系统视为**另一个 App**，会与旧版并存，且**无法读取旧版数据**
+- 迁移：旧版「我的 → 导出 JSON」→ 装新版 → 「导入 JSON」→ 卸载旧版
+- 从 v0.9.5 起包名固定，之后所有版本都可以覆盖升级
+
 ## 版本更新与签名（重要）
 
 从 v0.9.4 起，所有包都用仓库里的固定密钥 `android/app/yudong.p12` 签名，
