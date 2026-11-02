@@ -5,6 +5,7 @@ export type RestState = { endAt: number; totalMs: number; label: string } | null
 
 const KEY = "ironlog.rest";
 let state: RestState = null;
+let fired = false;
 const subs = new Set<() => void>();
 let alarm: ReturnType<typeof setTimeout> | null = null;
 
@@ -56,7 +57,8 @@ export function fireAlarm() {
 }
 
 function fire() {
-  if (!state) return;
+  if (!state || fired) return;
+  fired = true;
   const label = state.label;
   state = { ...state, endAt: Date.now() };
   persist();
@@ -77,6 +79,7 @@ export function startRest(sec: number, label = "休息") {
     stopRest();
     return;
   }
+  fired = false;
   state = { endAt: Date.now() + sec * 1000, totalMs: sec * 1000, label };
   persist();
   schedule();
@@ -87,6 +90,7 @@ export function startRest(sec: number, label = "休息") {
 export function extendRest(deltaSec: number) {
   if (!state) return;
   // 计时已归零时，从"现在"重新起算，而不是从旧的 endAt 累加（否则会吞掉归零后流逝的时间）
+  fired = false;
   const base = Math.max(Date.now(), state.endAt);
   const left = Math.max(0, state.endAt - Date.now());
   state = {
@@ -125,4 +129,13 @@ try {
   }
 } catch {
   /* ignore */
+}
+
+// 回到前台时补响（后台定时器被系统节流的情况）
+if (typeof document !== "undefined") {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && state && !fired && state.endAt <= Date.now()) {
+      fire();
+    }
+  });
 }

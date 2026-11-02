@@ -1,7 +1,12 @@
 package app.yudong.fit;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.media.AudioAttributes;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.GradientDrawable;
@@ -9,6 +14,8 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -28,6 +35,8 @@ public class RestOverlayService extends Service {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private long endAt = 0L;
     private String label = "休息";
+    private boolean alerted = false;
+    private Ringtone ringtone;
 
     private final Runnable tick = new Runnable() {
         @Override
@@ -39,6 +48,10 @@ public class RestOverlayService extends Service {
                 timeView.setText(String.format("%02d:%02d  %s", total / 60, total % 60, label));
                 timeView.setAlpha(1f);
             } else if (left > -20000) {
+                if (!alerted) {
+                    alerted = true;
+                    alertUser();
+                }
                 timeView.setText("休息结束 · " + label);
                 timeView.setAlpha(0.9f);
             } else {
@@ -49,6 +62,34 @@ public class RestOverlayService extends Service {
         }
     };
 
+    /** 原生提醒：WebView 退到后台会被节流，所以由悬浮窗服务负责响铃与震动 */
+    private void alertUser() {
+        try {
+            Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+            if (v != null) {
+                long[] pattern = { 0, 220, 120, 220, 120, 320 };
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    v.vibrate(VibrationEffect.createWaveform(pattern, -1));
+                } else {
+                    v.vibrate(pattern, -1);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        try {
+            Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            ringtone = RingtoneManager.getRingtone(this, uri);
+            if (ringtone != null) {
+                ringtone.setAudioAttributes(new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build());
+                ringtone.play();
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
@@ -56,6 +97,7 @@ public class RestOverlayService extends Service {
             String l = intent.getStringExtra("label");
             if (l != null) label = l;
         }
+        alerted = false;
         if (container == null) setup();
         handler.removeCallbacksAndMessages(null);
         handler.post(tick);
@@ -172,6 +214,10 @@ public class RestOverlayService extends Service {
     @Override
     public void onDestroy() {
         handler.removeCallbacksAndMessages(null);
+        try {
+            if (ringtone != null && ringtone.isPlaying()) ringtone.stop();
+        } catch (Exception ignored) {
+        }
         if (container != null && windowManager != null) {
             try {
                 windowManager.removeView(container);

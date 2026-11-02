@@ -113,8 +113,28 @@ function CardioCard(props: {
   onToggle: (minutes: number) => void;
 }) {
   const [min, setMin] = useState(String(Math.round((props.slot.durationSec ?? 1200) / 60)));
-  const kcal = Math.round(((8 * 3.5 * props.kg) / 200) * (Number(min) || 0));
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [elapsed, setElapsed] = useState(0);
   const done = !!props.log;
+  const kcal = Math.round(((8 * 3.5 * props.kg) / 200) * (Number(min) || 0));
+
+  useEffect(() => {
+    if (!startedAt) return;
+    const t = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 500);
+    return () => clearInterval(t);
+  }, [startedAt]);
+
+  const toggleTimer = () => {
+    if (startedAt) {
+      const secs = Math.floor((Date.now() - startedAt) / 1000);
+      setStartedAt(null);
+      setElapsed(0);
+      if (secs > 0) setMin(String(Math.max(1, Math.round(secs / 60))));
+    } else {
+      setElapsed(0);
+      setStartedAt(Date.now());
+    }
+  };
   return (
     <div className="rounded-3xl border border-line bg-surface p-3">
       <div className="flex items-baseline justify-between gap-2">
@@ -127,11 +147,20 @@ function CardioCard(props: {
         <span className="shrink-0 text-[12px] text-muted tabular-nums">约 {kcal} kcal</span>
       </div>
       <div className="mt-2 flex items-center gap-2">
+        <button
+          onClick={toggleTimer}
+          className={
+            "press h-12 rounded-xl px-3 text-[12px] font-medium " +
+            (startedAt ? "bg-accent/15 text-accent" : "bg-surface2 text-muted")
+          }
+        >
+          {startedAt ? String(Math.floor(elapsed / 60)).padStart(2, "0") + ":" + String(elapsed % 60).padStart(2, "0") : "计时"}
+        </button>
         <input
           inputMode="numeric"
           value={min}
           onChange={(e) => setMin(e.target.value)}
-          className="h-12 w-24 rounded-xl bg-surface2 px-3 text-center text-base tabular-nums outline-none focus:ring-2 focus:ring-accent/50"
+          className="h-12 w-20 rounded-xl bg-surface2 px-3 text-center text-base tabular-nums outline-none focus:ring-2 focus:ring-accent/50"
         />
         <span className="text-[12px] text-muted">分钟</span>
         <button
@@ -362,6 +391,7 @@ function Workout(props: { session: Session }) {
           {dur(now - session.startedAt)} · {done} 组 · 容量 {sessionVolume(session.logs)} kg · ≈{" "}
           {estimateKcal(session, [...byId.values()], latestWeight(metrics ?? []))} kcal
         </div>
+        <p className="mt-1 text-[11px] text-muted">卡路里按动作类型与有效训练时长估算，仅供参考，误差约 ±20%</p>
         <button
           onClick={() => void finishSession(session).then(() => stopRest())}
           className="press mt-3 w-full rounded-xl bg-accent py-4 font-semibold text-onaccent"

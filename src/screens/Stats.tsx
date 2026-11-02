@@ -35,6 +35,7 @@ export function StatsScreen() {
           <span>·</span>
           <span>≈ {weekKcal} kcal</span>
         </div>
+        <p className="mt-1 text-[11px] text-muted">卡路里为估算值（MET × 有效时长 × 体重），仅供参考</p>
       </Card>
 
       <Card>
