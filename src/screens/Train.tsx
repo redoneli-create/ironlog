@@ -21,6 +21,7 @@ import {
   toggleSet,
 } from "../lib/session";
 import { epley, ghostsOf, homeSignal, suggestNext } from "../lib/metrics";
+import { pushBack } from "../lib/backstack";
 import { startRest, stopRest } from "../lib/rest";
 import { keepScreenOn } from "../lib/keepAwake";
 import { ensureNotifyPermission } from "../lib/notify";
@@ -100,6 +101,49 @@ function SetRow(props: {
       >
         ✓
       </button>
+    </div>
+  );
+}
+
+function CardioCard(props: {
+  slot: RoutineExercise;
+  exercise?: Exercise;
+  log?: SetLog;
+  kg: number;
+  onToggle: (minutes: number) => void;
+}) {
+  const [min, setMin] = useState(String(Math.round((props.slot.durationSec ?? 1200) / 60)));
+  const kcal = Math.round(((8 * 3.5 * props.kg) / 200) * (Number(min) || 0));
+  const done = !!props.log;
+  return (
+    <div className="rounded-3xl border border-line bg-surface p-3">
+      <div className="flex items-baseline justify-between gap-2">
+        <div className="min-w-0">
+          <div className="truncate font-medium">{exerciseLabel(props.exercise)}</div>
+          <div className="truncate text-[12px] text-muted">
+            {equipmentZh(props.exercise?.equipment)} · 有氧
+          </div>
+        </div>
+        <span className="shrink-0 text-[12px] text-muted tabular-nums">约 {kcal} kcal</span>
+      </div>
+      <div className="mt-2 flex items-center gap-2">
+        <input
+          inputMode="numeric"
+          value={min}
+          onChange={(e) => setMin(e.target.value)}
+          className="h-12 w-24 rounded-xl bg-surface2 px-3 text-center text-base tabular-nums outline-none focus:ring-2 focus:ring-accent/50"
+        />
+        <span className="text-[12px] text-muted">分钟</span>
+        <button
+          onClick={() => props.onToggle(Number(min) || 0)}
+          className={
+            "press ml-auto h-12 rounded-xl px-5 text-sm font-semibold " +
+            (done ? "bg-accent/15 text-accent" : "bg-accent text-onaccent")
+          }
+        >
+          {done ? "已完成" : "完成"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -213,6 +257,11 @@ function Workout(props: { session: Session }) {
 
   const [restOverrides, setRestOverrides] = useState<Record<string, number>>({});
   const [tut, setTut] = useState<Exercise | null>(null);
+
+  useEffect(() => pushBack(() => {
+    setSheet(true);
+    return true;
+  }), []);
   const [now, setNow] = useState(Date.now());
   const [sheet, setSheet] = useState(false);
 
@@ -271,6 +320,21 @@ function Workout(props: { session: Session }) {
           )}
           {block.exercises.map((slot, si) => {
             const ghost = ghosts.get(slot.exerciseId);
+            const ex = byId.get(slot.exerciseId);
+            if (ex?.bodyPart === "cardio") {
+              return (
+                <CardioCard
+                  key={slot.exerciseId + "-" + bi + "-" + si}
+                  slot={slot}
+                  exercise={ex}
+                  log={session.logs.find((l) => l.exerciseId === slot.exerciseId)}
+                  kg={latestWeight(metrics ?? [])}
+                  onToggle={(minutes) =>
+                    void toggleSet(session, slot.exerciseId, 1, 0, 0, minutes * 60)
+                  }
+                />
+              );
+            }
             return (
               <ExerciseCard
                 key={slot.exerciseId + "-" + bi + "-" + si}

@@ -29,10 +29,11 @@ export async function toggleSet(
   setNo: number,
   weight: number,
   reps: number,
+  seconds?: number,
 ): Promise<void> {
   const logs = isDone(session.logs, exerciseId, setNo)
     ? session.logs.filter((l) => !(l.exerciseId === exerciseId && l.setNo === setNo))
-    : [...session.logs, { exerciseId, setNo, weight, reps, doneAt: Date.now() }];
+    : [...session.logs, { exerciseId, setNo, weight, reps, ...(seconds ? { seconds } : {}), doneAt: Date.now() }];
   await db.sessions.update(session.id, { logs });
 }
 

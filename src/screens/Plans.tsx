@@ -59,7 +59,13 @@ function RoutineEditor(props: { routine: Routine | null; onClose: () => void }) 
   const patch = (i: number, p: Partial<Slot>) => setSlots((list) => list.map((s, j) => (j === i ? { ...s, ...p } : s)));
 
   const add = (e: Exercise) => {
-    setSlots((list) => [...list, { exerciseId: e.id, sets: 3, reps: "8-12", restSec: 90 }]);
+    const cardio = e.bodyPart === "cardio";
+    setSlots((list) => [
+      ...list,
+      cardio
+        ? { exerciseId: e.id, sets: 1, reps: "-", restSec: 60, durationSec: 1200 }
+        : { exerciseId: e.id, sets: 3, reps: "8-12", restSec: 90 },
+    ]);
     setPicking(false);
   };
 
@@ -124,6 +130,17 @@ function RoutineEditor(props: { routine: Routine | null; onClose: () => void }) 
                 </button>
               </div>
             </div>
+            {byId.get(s.exerciseId)?.bodyPart === "cardio" ? (
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <Mini
+                  label="时长(分钟)"
+                  value={String(Math.round((s.durationSec ?? 1200) / 60))}
+                  onChange={(v) => patch(i, { durationSec: (Number(v) || 1) * 60 })}
+                />
+                <Mini label="休(s)" value={String(s.restSec)} onChange={(v) => patch(i, { restSec: Number(v) || 0 })} />
+              </div>
+            ) : (
+            <>
             <div className="mt-2 grid grid-cols-3 gap-2">
               <Mini label="组" value={String(s.sets)} onChange={(v) => patch(i, { sets: Number(v) || 1 })} />
               <Mini label="次" mode="text" value={s.reps} onChange={(v) => patch(i, { reps: v })} />
@@ -137,6 +154,8 @@ function RoutineEditor(props: { routine: Routine | null; onClose: () => void }) 
               <Mini label="休(s)" value={String(s.restSec)} onChange={(v) => patch(i, { restSec: Number(v) || 0 })} />
               <Mini label="Tempo" mode="text" value={s.tempo ?? ""} onChange={(v) => patch(i, { tempo: v || undefined })} />
             </div>
+            </>
+            )}
           </div>
         ))}
         {!slots.length && <Empty text="还没有动作" />}

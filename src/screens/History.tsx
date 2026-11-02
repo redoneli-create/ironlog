@@ -54,6 +54,16 @@ function SessionDetail({ session, onClose }: { session: Session; onClose: () => 
             </div>
             <div className="mt-1 flex flex-wrap gap-1">
               {g.logs.map((l) => {
+                const ex = exMap.get(l.exerciseId);
+                if (ex?.bodyPart === "cardio") {
+                  const mins = Math.round((l.seconds ?? 0) / 60);
+                  const kcalC = Math.round(((8 * 3.5 * latestWeight(metrics ?? [])) / 200) * mins);
+                  return (
+                    <span key={l.setNo} className="rounded-md bg-surface2 px-2 py-1 text-[11px] tabular-nums">
+                      {mins} 分钟 · 约 {kcalC} kcal
+                    </span>
+                  );
+                }
                 const best = isPr(l.weight, l.reps, l.exerciseId);
                 return (
                   <span

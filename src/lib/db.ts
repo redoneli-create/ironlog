@@ -41,6 +41,8 @@ export interface RoutineExercise {
   tempo?: string;
   /** 计划里的目标重量（kg），开始训练时预填 */
   weight?: number;
+  /** 有氧动作的计划时长（秒） */
+  durationSec?: number;
 }
 
 export interface Block {
@@ -76,6 +78,8 @@ export interface SetLog {
   weight: number;
   reps: number;
   rpe?: number;
+  /** 有氧：实际时长（秒） */
+  seconds?: number;
   doneAt: number;
 }
 

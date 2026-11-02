@@ -13,6 +13,7 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -21,7 +22,9 @@ public class RestOverlayService extends Service {
 
     private WindowManager windowManager;
     private WindowManager.LayoutParams params;
-    private TextView view;
+    private LinearLayout container;
+    private TextView timeView;
+    private TextView closeView;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private long endAt = 0L;
     private String label = "休息";
@@ -29,15 +32,15 @@ public class RestOverlayService extends Service {
     private final Runnable tick = new Runnable() {
         @Override
         public void run() {
-            if (view == null) return;
+            if (timeView == null) return;
             long left = endAt - System.currentTimeMillis();
             if (left > 0) {
                 long total = (left + 999) / 1000;
-                view.setText(String.format("%02d:%02d  %s", total / 60, total % 60, label));
-                view.setAlpha(1f);
+                timeView.setText(String.format("%02d:%02d  %s", total / 60, total % 60, label));
+                timeView.setAlpha(1f);
             } else if (left > -20000) {
-                view.setText("休息结束 · " + label);
-                view.setAlpha(0.9f);
+                timeView.setText("休息结束 · " + label);
+                timeView.setAlpha(0.9f);
             } else {
                 stopSelf();
                 return;
@@ -53,23 +56,52 @@ public class RestOverlayService extends Service {
             String l = intent.getStringExtra("label");
             if (l != null) label = l;
         }
-        if (view == null) setup();
+        if (container == null) setup();
         handler.removeCallbacksAndMessages(null);
         handler.post(tick);
         return START_NOT_STICKY;
     }
 
+    private void revealClose(boolean show) {
+        if (closeView == null) return;
+        closeView.setVisibility(show ? View.VISIBLE : View.GONE);
+        try {
+            windowManager.updateViewLayout(container, params);
+        } catch (Exception ignored) {
+        }
+        handler.removeCallbacks(hideClose);
+        if (show) handler.postDelayed(hideClose, 6000);
+    }
+
+    private final Runnable hideClose = () -> revealClose(false);
+
     private void setup() {
-        view = new TextView(this);
-        view.setTextColor(Color.WHITE);
-        view.setTextSize(17f);
-        view.setPadding(46, 24, 46, 24);
+        container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.HORIZONTAL);
+        container.setGravity(Gravity.CENTER_VERTICAL);
+        container.setPadding(46, 20, 30, 20);
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(Color.parseColor("#E60B0F14"));
         bg.setCornerRadius(70f);
         bg.setStroke(3, Color.parseColor("#D8DCE2"));
-        view.setBackground(bg);
+        container.setBackground(bg);
+
+        timeView = new TextView(this);
+        timeView.setTextColor(Color.WHITE);
+        timeView.setTextSize(17f);
+        timeView.setPadding(0, 4, 8, 4);
+
+        closeView = new TextView(this);
+        closeView.setText("✕");
+        closeView.setTextColor(Color.parseColor("#D8DCE2"));
+        closeView.setTextSize(16f);
+        closeView.setPadding(24, 12, 24, 12);
+        closeView.setVisibility(View.GONE);
+        closeView.setOnClickListener(v -> stopSelf());
+
+        container.addView(timeView);
+        container.addView(closeView);
 
         int overlayType = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -88,7 +120,7 @@ public class RestOverlayService extends Service {
         params.x = 40;
         params.y = 140;
 
-        view.setOnTouchListener(new View.OnTouchListener() {
+        timeView.setOnTouchListener(new View.OnTouchListener() {
             private float downX;
             private float downY;
             private int startX;
@@ -113,14 +145,14 @@ public class RestOverlayService extends Service {
                             params.x = startX + dx;
                             params.y = startY + dy;
                             try {
-                                windowManager.updateViewLayout(view, params);
+                                windowManager.updateViewLayout(container, params);
                             } catch (Exception ignored) {
                             }
                         }
                         return true;
                     }
                     case MotionEvent.ACTION_UP:
-                        if (!moved) stopSelf();
+                        if (!moved) revealClose(closeView.getVisibility() != View.VISIBLE);
                         return true;
                     default:
                         return false;
@@ -130,9 +162,9 @@ public class RestOverlayService extends Service {
 
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         try {
-            windowManager.addView(view, params);
+            windowManager.addView(container, params);
         } catch (Exception e) {
-            view = null;
+            container = null;
             stopSelf();
         }
     }
@@ -140,12 +172,12 @@ public class RestOverlayService extends Service {
     @Override
     public void onDestroy() {
         handler.removeCallbacksAndMessages(null);
-        if (view != null && windowManager != null) {
+        if (container != null && windowManager != null) {
             try {
-                windowManager.removeView(view);
+                windowManager.removeView(container);
             } catch (Exception ignored) {
             }
-            view = null;
+            container = null;
         }
         super.onDestroy();
     }

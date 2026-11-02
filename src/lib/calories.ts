@@ -33,20 +33,40 @@ const MET: Record<string, number> = {
   custom: 4.5,
 };
 
-/** 按动作器械估 MET，再用会话时长折算千卡（MET × 3.5 × kg ÷ 200 × 分钟） */
+/** 有效训练时长：按每组完成时间累加，间隔超过 5 分钟按 5 分钟算（避免忘记关掉导致数字巨大） */
+export function activeMinutes(session: Session): number {
+  const times = session.logs.map((l) => l.doneAt).sort((a, b) => a - b);
+  if (!times.length) return 0;
+  let ms = 60_000; // 第一组按 1 分钟
+  for (let i = 1; i < times.length; i++) {
+    ms += Math.min(times[i] - times[i - 1], 300_000);
+  }
+  return ms / 60000;
+}
+
+/** 有氧按实际记录时长计；力量按有效时长 × 平均 MET 计。MET × 3.5 × kg ÷ 200 × 分钟 */
 export function estimateKcal(session: Session, exercises: Exercise[], bodyWeight = 70): number {
   if (!session.logs.length) return 0;
-  const end = session.endedAt ?? Date.now();
-  const minutes = Math.max(1, (end - session.startedAt) / 60000);
   const byId = new Map(exercises.map((e) => [e.id, e]));
-  let sum = 0;
+  let cardioMin = 0;
+  let metSum = 0;
+  let metCount = 0;
+
   for (const log of session.logs) {
     const ex = byId.get(log.exerciseId);
-    const met = ex?.bodyPart === "cardio" ? 8 : MET[ex?.equipment ?? ""] ?? 4.5;
-    sum += met;
+    if (ex?.bodyPart === "cardio") {
+      cardioMin += (log.seconds ?? 0) / 60;
+      continue;
+    }
+    metSum += MET[ex?.equipment ?? ""] ?? 4.5;
+    metCount += 1;
   }
-  const met = sum / session.logs.length;
-  return Math.round(((met * 3.5 * bodyWeight) / 200) * minutes);
+
+  const strengthMin = Math.max(0, activeMinutes(session) - cardioMin);
+  const met = metCount ? metSum / metCount : 4.5;
+  const strengthKcal = (met * 3.5 * bodyWeight) / 200 * strengthMin;
+  const cardioKcal = (8 * 3.5 * bodyWeight) / 200 * cardioMin;
+  return Math.round(strengthKcal + cardioKcal);
 }
 
 export function latestWeight(metrics: BodyMetric[]): number {
