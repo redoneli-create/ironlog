@@ -41,7 +41,7 @@ function SessionDetail({ session, onClose }: { session: Session; onClose: () => 
         <span>{stats.volume} kg</span>
         <span>·</span>
         <span>{stats.minutes} 分钟</span>
-        <span>· ≈ {kcal} kcal</span>
+        {kcal > 0 && <span>· 有氧 ≈ {kcal} kcal</span>}
         {prCount > 0 && <span className="text-accent">· {prCount} 个纪录</span>}
       </div>
 

@@ -33,9 +33,9 @@ export function StatsScreen() {
           <span>·</span>
           <span>{Math.round(thisWeek.volume)} kg 容量</span>
           <span>·</span>
-          <span>≈ {weekKcal} kcal</span>
+          <span>有氧 ≈ {weekKcal} kcal</span>
         </div>
-        <p className="mt-1 text-[11px] text-muted">卡路里为估算值（MET × 有效时长 × 体重），仅供参考</p>
+        <p className="mt-1 text-[11px] text-muted">只统计有氧消耗（时长 × 体重估算），力量训练不计入</p>
       </Card>
 
       <Card>

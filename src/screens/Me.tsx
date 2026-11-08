@@ -6,6 +6,7 @@ import { clearAll, exportCSV, exportJSON, importCSV, importJSON, type CsvMap } f
 import { Btn, Card, Chip, SectionTitle } from "../components/ui";
 import { isNativeApp, requestOverlay } from "../lib/overlay";
 import { Icon } from "../components/Icons";
+import { ImageCropper } from "../components/ImageCropper";
 
 const REST_OPTIONS = [45, 60, 90, 120, 180, 240];
 
@@ -35,33 +36,13 @@ function FileBtn(props: { accept: string; onFile: (f: File) => void; children: R
   );
 }
 
-const shrink = (file: File) =>
-  new Promise<string>((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      const max = 1400;
-      const scale = Math.min(1, max / Math.max(img.width, img.height));
-      const c = document.createElement("canvas");
-      c.width = Math.max(1, Math.round(img.width * scale));
-      c.height = Math.max(1, Math.round(img.height * scale));
-      c.getContext("2d")?.drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(url);
-      resolve(c.toDataURL("image/jpeg", 0.82));
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("图片读取失败"));
-    };
-    img.src = url;
-  });
-
 export function MeScreen() {
   const settings = useLiveQuery(() => db.settings.get("app"), []);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [map, setMap] = useState<CsvMap>("strong");
   const [opPreview, setOpPreview] = useState<number | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   const patch = (p: Partial<Settings>) => db.settings.update("app", p);
 
@@ -117,15 +98,11 @@ export function MeScreen() {
         <div className="mt-2 grid grid-cols-2 gap-2">
           <FileBtn
             accept="image/*"
-            onFile={(f) =>
-              void run("壁纸取色", async () => {
-                const data = await shrink(f);
-                const pal = await extractPalette(data);
-                await patch({ wallpaper: data, accent: pal.accent });
-                applyWallpaper(data, settings?.wallpaperOpacity ?? 35);
-                applyTheme(theme, pal.accent);
-              })
-            }
+            onFile={(f) => {
+              const reader = new FileReader();
+              reader.onload = () => setCropSrc(String(reader.result));
+              reader.readAsDataURL(f);
+            }}
           >
             上传壁纸
           </FileBtn>
@@ -286,6 +263,22 @@ export function MeScreen() {
       </Card>
 
       <p className="pb-2 text-center text-[12px] text-muted">予动 v0.7 · MIT · 数据仅存本机</p>
+      {cropSrc && (
+        <ImageCropper
+          src={cropSrc}
+          onCancel={() => setCropSrc(null)}
+          onDone={(dataUrl) => {
+            setCropSrc(null);
+            void run("壁纸取色", async () => {
+              const pal = await extractPalette(dataUrl);
+              await patch({ wallpaper: dataUrl, accent: pal.accent });
+              applyWallpaper(dataUrl, settings?.wallpaperOpacity ?? 35);
+              applyTheme(theme, pal.accent);
+            });
+          }}
+        />
+      )}
+
       <p className="pb-6 text-center text-[12px] tracking-[0.18em] text-muted/70">BY REDONE</p>
     </div>
   );

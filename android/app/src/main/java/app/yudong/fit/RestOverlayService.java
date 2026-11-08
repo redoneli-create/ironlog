@@ -67,7 +67,7 @@ public class RestOverlayService extends Service {
         try {
             Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
             if (v != null) {
-                long[] pattern = { 0, 220, 120, 220, 120, 320 };
+                long[] pattern = { 0, 420 };
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     v.vibrate(VibrationEffect.createWaveform(pattern, -1));
                 } else {

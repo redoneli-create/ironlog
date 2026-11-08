@@ -389,9 +389,9 @@ function Workout(props: { session: Session }) {
       <Sheet open={sheet} onClose={() => setSheet(false)} title="结束训练">
         <div className="text-sm text-muted tabular-nums">
           {dur(now - session.startedAt)} · {done} 组 · 容量 {sessionVolume(session.logs)} kg · ≈{" "}
-          {estimateKcal(session, [...byId.values()], latestWeight(metrics ?? []))} kcal
+          {estimateKcal(session, [...byId.values()], latestWeight(metrics ?? []))} kcal（有氧）
         </div>
-        <p className="mt-1 text-[11px] text-muted">卡路里按动作类型与有效训练时长估算，仅供参考，误差约 ±20%</p>
+        <p className="mt-1 text-[11px] text-muted">只统计有氧（按时长估算）；力量训练不计入，避免组间休息被误算</p>
         <button
           onClick={() => void finishSession(session).then(() => stopRest())}
           className="press mt-3 w-full rounded-xl bg-accent py-4 font-semibold text-onaccent"

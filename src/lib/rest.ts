@@ -1,5 +1,5 @@
 import { notifyRestDone } from "./notify";
-import { hideOverlay, showOverlay } from "./overlay";
+import { hideOverlay, isNativeApp, overlayGranted, showOverlay } from "./overlay";
 
 export type RestState = { endAt: number; totalMs: number; label: string } | null;
 
@@ -63,7 +63,11 @@ function fire() {
   state = { ...state, endAt: Date.now() };
   persist();
   emit();
-  fireAlarm();
+  // 原生悬浮窗服务已在后台负责响铃+震动；只有浏览器或未授权时才由网页发声
+  void (async () => {
+    const granted = isNativeApp() ? await overlayGranted() : false;
+    if (!isNativeApp() || !granted) fireAlarm();
+  })();
   if (typeof document !== "undefined" && document.hidden) notifyRestDone(label);
 }
 
