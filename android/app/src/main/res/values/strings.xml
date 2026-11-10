@@ -4,4 +4,5 @@
     <string name="title_activity_main">予动</string>
     <string name="package_name">app.yudong.fit</string>
     <string name="custom_url_scheme">app.yudong.fit</string>
+    <string name="widget_desc">今天要练的计划</string>
 </resources>

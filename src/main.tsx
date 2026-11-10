@@ -15,6 +15,7 @@ import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { App as CapApp } from "@capacitor/app";
 import { runBack } from "./lib/backstack";
+import { syncPlanWidget } from "./lib/widget";
 
 type Tab = "train" | "plans" | "library" | "body" | "me";
 
@@ -74,6 +75,22 @@ function TabIcon({ id }: { id: Tab }) {
 function App() {
   const [tab, setTab] = useState<Tab>("train");
   const settings = useLiveQuery(() => db.settings.get("app"), []);
+  const routines = useLiveQuery(() => db.routines.toArray(), []);
+
+  useEffect(() => {
+    if (!settings) return;
+    const today = localDate();
+    const dow = String(((new Date().getDay() + 6) % 7) + 1);
+    const raw = settings.schedule?.[today];
+    const ids = [
+      ...(Array.isArray(raw) ? raw : []),
+      ...(settings.weeklySchedule?.[dow] ? [settings.weeklySchedule[dow]] : []),
+    ];
+    const names = [...new Set(ids)]
+      .map((id) => (routines ?? []).find((r) => r.id === id)?.name)
+      .filter(Boolean) as string[];
+    void syncPlanWidget(names.length ? names.join(" · ") : "还没有安排，点开挑一个计划");
+  }, [settings?.schedule, settings?.weeklySchedule, routines]);
 
   useEffect(() => {
     void ensureSeed();

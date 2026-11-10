@@ -33,6 +33,7 @@
 - **可靠性**：训练中屏幕常亮（Wake Lock）、后台休息结束发系统通知、14 天未备份在首页提醒导出
 - **误删可撤销**：删训练/例程/计划/动作/体重记录/教程链接均可在 Toast 里撤销
 - **备份**：JSON 全量导出 / 导入；CSV 导出；FitNotes / Strong CSV 导入
+- **桌面小组件**：Android 桌面小组件显示「今天练什么」，点一下直接进 App
 - **PWA**：可安装、离线可用（Workbox 预缓存）
 - **APK**：内置 Capacitor 工程，可打包成 Android 安装包（[docs/APK.md](docs/APK.md)）
 
