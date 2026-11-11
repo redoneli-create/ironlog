@@ -24,6 +24,8 @@ import {
 import { epley, ghostsOf, homeSignal, suggestNext } from "../lib/metrics";
 import { pushBack } from "../lib/backstack";
 import { FollowAlong } from "./FollowAlong";
+import { TipsPage } from "./TipsPage";
+import { QuickGrid } from "../components/QuickGrid";
 import { cycleInfo, PHASE_LABEL, PHASE_TIP } from "../lib/cycle";
 import { startRest, stopRest } from "../lib/rest";
 import { keepScreenOn } from "../lib/keepAwake";
@@ -418,7 +420,7 @@ function Workout(props: { session: Session }) {
   );
 }
 
-function Picker() {
+function Picker({ onNavigate, onOpenTips }: { onNavigate: (tab: "plans" | "library" | "body" | "me") => void; onOpenTips: () => void }) {
   const programs = useLiveQuery(() => db.programs.toArray(), []);
   const routines = useLiveQuery(() => db.routines.toArray(), []);
   const sessions = useLiveQuery(() => db.sessions.toArray(), []);
@@ -448,6 +450,19 @@ function Picker() {
 
   return (
     <div className="space-y-3">
+      <QuickGrid
+        items={[
+          { id: "follow", label: "跟练", icon: "play", bg: "#F8E4EA", fg: "#C65C7C", onClick: () => setFollowPick(true) },
+          { id: "plans", label: "计划", icon: "calendar", bg: "#F8EDDF", fg: "#B98F5E", onClick: () => onNavigate("plans") },
+          { id: "library", label: "动作库", icon: "list", bg: "#F0E8F6", fg: "#A07CB8", onClick: () => onNavigate("library") },
+          { id: "calendar", label: "日历", icon: "target", bg: "#E8EFF8", fg: "#7E97C4", onClick: () => onNavigate("plans") },
+          { id: "data", label: "数据", icon: "chart", bg: "#E9F2EC", fg: "#6F9A83", onClick: () => onNavigate("body") },
+          { id: "tips", label: "女性健康", icon: "heart", bg: "#FBE9DF", fg: "#CD7F63", onClick: onOpenTips },
+          { id: "stats", label: "统计", icon: "flame", bg: "#F5EDE0", fg: "#B4895F", onClick: () => onNavigate("body") },
+          { id: "me", label: "设置", icon: "settings", bg: "#EFEDEC", fg: "#6B6266", onClick: () => onNavigate("me") },
+        ]}
+      />
+
       <Card className="bg-gradient-to-br from-accent/20 to-transparent">
         <div className="text-[12px] text-muted">{localDate()}</div>
         <div className="mt-0.5 text-lg font-semibold">{signal.title}</div>
@@ -598,12 +613,14 @@ function Picker() {
   );
 }
 
-export function TrainScreen() {
+export function TrainScreen({ onNavigate }: { onNavigate: (tab: "plans" | "library" | "body" | "me") => void }) {
   const active = useLiveQuery(activeSession, []);
+  const [tips, setTips] = useState(false);
   return (
     <>
-      {active ? <Workout session={active} /> : <Picker />}
+      {active ? <Workout session={active} /> : <Picker onNavigate={onNavigate} onOpenTips={() => setTips(true)} />}
       <RestBar />
+      {tips && <TipsPage onClose={() => setTips(false)} />}
     </>
   );
 }
