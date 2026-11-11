@@ -3,12 +3,13 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db, type Settings } from "../lib/db";
 import { PRESETS, applyTheme, applyWallpaper, extractPalette, presetOf } from "../lib/theme";
 import { clearAll, exportCSV, exportJSON, importCSV, importJSON, type CsvMap } from "../lib/backup";
-import { Btn, Card, Chip, Field, SectionTitle, Sheet, TextInput } from "../components/ui";
+import { Btn, Card, Chip, Field, SectionTitle, TextInput } from "../components/ui";
 import { isNativeApp, requestOverlay } from "../lib/overlay";
 import { Icon } from "../components/Icons";
 import { ImageCropper } from "../components/ImageCropper";
 import { cycleInfo, PHASE_LABEL } from "../lib/cycle";
-import { TIPS, TIP_DISCLAIMER } from "../lib/tips";
+import { TIPS } from "../lib/tips";
+import { TipsPage } from "./TipsPage";
 
 const REST_OPTIONS = [45, 60, 90, 120, 180, 240];
 
@@ -48,7 +49,6 @@ export function MeScreen() {
   const [cycleDate, setCycleDate] = useState(settings?.cycle?.lastStart ?? "");
   const [cycleLen, setCycleLen] = useState(String(settings?.cycle?.length ?? 28));
   const [tipsOpen, setTipsOpen] = useState(false);
-  const [tipId, setTipId] = useState<string | null>(null);
   const cycle = settings?.cycle ? cycleInfo(settings.cycle) : null;
 
   const saveCycle = (date = cycleDate, len = cycleLen) => {
@@ -236,29 +236,7 @@ export function MeScreen() {
         >
           女性健康小贴士 · {TIPS.length} 篇（离线内置）
         </button>
-        <Sheet open={tipsOpen} onClose={() => setTipsOpen(false)} title="女性健康小贴士" size="full">
-          <div className="space-y-1">
-            {TIPS.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTipId(t.id)}
-                className="flex w-full items-center justify-between rounded-xl bg-surface2 px-3 py-3 text-left"
-              >
-                <span className="text-sm">{t.title}</span>
-                <span className="text-[11px] text-muted">{t.tag}</span>
-              </button>
-            ))}
-          </div>
-          <p className="mt-3 text-[11px] text-muted">{TIP_DISCLAIMER}</p>
-        </Sheet>
-        <Sheet
-          open={!!tipId}
-          onClose={() => setTipId(null)}
-          title={TIPS.find((t) => t.id === tipId)?.title ?? ""}
-        >
-          <p className="text-sm leading-relaxed text-ink/90">{TIPS.find((t) => t.id === tipId)?.body}</p>
-          <p className="mt-4 text-[11px] text-muted">{TIP_DISCLAIMER}</p>
-        </Sheet>
+        {tipsOpen && <TipsPage onClose={() => setTipsOpen(false)} />}
       </Card>
 
       <Card>
