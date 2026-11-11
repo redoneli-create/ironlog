@@ -3,10 +3,12 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db, type Settings } from "../lib/db";
 import { PRESETS, applyTheme, applyWallpaper, extractPalette, presetOf } from "../lib/theme";
 import { clearAll, exportCSV, exportJSON, importCSV, importJSON, type CsvMap } from "../lib/backup";
-import { Btn, Card, Chip, SectionTitle } from "../components/ui";
+import { Btn, Card, Chip, Field, SectionTitle, Sheet, TextInput } from "../components/ui";
 import { isNativeApp, requestOverlay } from "../lib/overlay";
 import { Icon } from "../components/Icons";
 import { ImageCropper } from "../components/ImageCropper";
+import { cycleInfo, PHASE_LABEL } from "../lib/cycle";
+import { TIPS, TIP_DISCLAIMER } from "../lib/tips";
 
 const REST_OPTIONS = [45, 60, 90, 120, 180, 240];
 
@@ -43,6 +45,16 @@ export function MeScreen() {
   const [map, setMap] = useState<CsvMap>("strong");
   const [opPreview, setOpPreview] = useState<number | null>(null);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cycleDate, setCycleDate] = useState(settings?.cycle?.lastStart ?? "");
+  const [cycleLen, setCycleLen] = useState(String(settings?.cycle?.length ?? 28));
+  const [tipsOpen, setTipsOpen] = useState(false);
+  const [tipId, setTipId] = useState<string | null>(null);
+  const cycle = settings?.cycle ? cycleInfo(settings.cycle) : null;
+
+  const saveCycle = (date = cycleDate, len = cycleLen) => {
+    if (!date) return;
+    void patch({ cycle: { lastStart: date, length: Math.max(18, Math.min(60, Number(len) || 28)) } });
+  };
 
   const patch = (p: Partial<Settings>) => db.settings.update("app", p);
 
@@ -193,6 +205,60 @@ export function MeScreen() {
             </Chip>
           ))}
         </div>
+      </Card>
+
+      <Card>
+        <SectionTitle>
+          <span className="inline-flex items-center gap-1.5"><Icon name="sparkle" />女性健康</span>
+        </SectionTitle>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <Field label="上次经期开始">
+            <TextInput value={cycleDate} onChange={setCycleDate} type="date" />
+          </Field>
+          <Field label="周期长度（天）">
+            <TextInput value={cycleLen} onChange={setCycleLen} inputMode="numeric" />
+          </Field>
+        </div>
+        <div className="mt-2 flex items-center justify-between">
+          <span className="text-[11px] text-muted">仅保存在本机，不上传</span>
+          <button onClick={() => saveCycle()} className="rounded-lg bg-accent/15 px-2.5 py-1 text-[11px] font-semibold text-accent">
+            保存周期
+          </button>
+        </div>
+        {cycle && (
+          <p className="mt-2 text-[12px] text-muted">
+            当前：{PHASE_LABEL[cycle.phase]} 第 {cycle.day} 天 · 下次预计 {cycle.nextStart.slice(5)}（还有 {cycle.daysToNext} 天）
+          </p>
+        )}
+        <button
+          onClick={() => setTipsOpen(true)}
+          className="press mt-3 w-full rounded-xl border border-line py-2.5 text-[12px]"
+        >
+          女性健康小贴士 · {TIPS.length} 篇（离线内置）
+        </button>
+        <Sheet open={tipsOpen} onClose={() => setTipsOpen(false)} title="女性健康小贴士" size="full">
+          <div className="space-y-1">
+            {TIPS.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTipId(t.id)}
+                className="flex w-full items-center justify-between rounded-xl bg-surface2 px-3 py-3 text-left"
+              >
+                <span className="text-sm">{t.title}</span>
+                <span className="text-[11px] text-muted">{t.tag}</span>
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 text-[11px] text-muted">{TIP_DISCLAIMER}</p>
+        </Sheet>
+        <Sheet
+          open={!!tipId}
+          onClose={() => setTipId(null)}
+          title={TIPS.find((t) => t.id === tipId)?.title ?? ""}
+        >
+          <p className="text-sm leading-relaxed text-ink/90">{TIPS.find((t) => t.id === tipId)?.body}</p>
+          <p className="mt-4 text-[11px] text-muted">{TIP_DISCLAIMER}</p>
+        </Sheet>
       </Card>
 
       <Card>

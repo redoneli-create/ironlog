@@ -6,6 +6,7 @@ import {
   exerciseLabel,
   localDate,
   type Exercise,
+  type Routine,
   type RoutineExercise,
   type Session,
   type SetLog,
@@ -22,6 +23,8 @@ import {
 } from "../lib/session";
 import { epley, ghostsOf, homeSignal, suggestNext } from "../lib/metrics";
 import { pushBack } from "../lib/backstack";
+import { FollowAlong } from "./FollowAlong";
+import { cycleInfo, PHASE_LABEL, PHASE_TIP } from "../lib/cycle";
 import { startRest, stopRest } from "../lib/rest";
 import { keepScreenOn } from "../lib/keepAwake";
 import { ensureNotifyPermission } from "../lib/notify";
@@ -422,6 +425,9 @@ function Picker() {
   const settings = useLiveQuery(() => db.settings.get("app"), []);
   const last = (sessions ?? []).filter((s) => s.endedAt).sort((a, b) => (b.endedAt ?? 0) - (a.endedAt ?? 0))[0];
   const [open, setOpen] = useState<string | null>(null);
+  const [follow, setFollow] = useState<Routine | null>(null);
+  const [followPick, setFollowPick] = useState(false);
+  const cycle = settings?.cycle ? cycleInfo(settings.cycle) : null;
   const byId = new Map((routines ?? []).map((r) => [r.id, r]));
   const signal = homeSignal(sessions ?? [], localDate());
   const todayKey = localDate();
@@ -438,6 +444,8 @@ function Picker() {
   const needBackup = stale && (settings?.backupSnoozeUntil ?? 0) < Date.now();
   const lastRoutine = last ? byId.get(last.routineId) : undefined;
 
+  if (follow) return <FollowAlong routine={follow} onExit={() => setFollow(null)} />;
+
   return (
     <div className="space-y-3">
       <Card className="bg-gradient-to-br from-accent/20 to-transparent">
@@ -445,6 +453,26 @@ function Picker() {
         <div className="mt-0.5 text-lg font-semibold">{signal.title}</div>
         <div className="mt-0.5 text-xs text-muted">{signal.detail}</div>
       </Card>
+
+      <div className="flex gap-2">
+        <button
+          onClick={() => setFollowPick(true)}
+          className="press flex-1 rounded-xl border border-line bg-surface py-2.5 text-[12px] font-medium"
+        >
+          跟练模式 · 语音提示
+        </button>
+      </div>
+
+      {cycle && (
+        <Card className="border-accent/30">
+          <div className="flex items-baseline justify-between">
+            <span className="text-[12px] text-muted">周期 · {PHASE_LABEL[cycle.phase]} 第 {cycle.day} 天</span>
+            <span className="text-[11px] text-muted">预计 {cycle.daysToNext} 天后</span>
+          </div>
+          <div className="mt-1 text-sm font-semibold">{PHASE_TIP[cycle.phase].title}</div>
+          <div className="mt-0.5 text-[12px] text-muted">{PHASE_TIP[cycle.phase].body}</div>
+        </Card>
+      )}
 
       {!!scheduledList.length && (
         <Card className="border-accent/30">
@@ -546,6 +574,24 @@ function Picker() {
           </div>
         );
       })}
+
+      <Sheet open={followPick} onClose={() => setFollowPick(false)} title="选择跟练例程" size="full">
+        <div className="space-y-1">
+          {(routines ?? []).map((r) => (
+            <button
+              key={r.id}
+              onClick={() => {
+                setFollowPick(false);
+                setFollow(r);
+              }}
+              className="flex w-full items-center justify-between rounded-xl bg-surface2 px-3 py-3 text-left"
+            >
+              <span className="text-sm">{r.name}</span>
+              <span className="text-[11px] text-muted">{plannedSets(r)} 组</span>
+            </button>
+          ))}
+        </div>
+      </Sheet>
 
       <p className="pt-2 text-center text-[11px] tracking-[0.18em] text-muted/70">BY REDONE</p>
     </div>

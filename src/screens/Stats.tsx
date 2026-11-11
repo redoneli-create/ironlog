@@ -17,6 +17,13 @@ export function StatsScreen() {
   const weekKey = weeks[weeks.length - 1].start;
   const weekSessions = done.filter((s) => weekKey === weeklyStats([s], 1, s.date)[0].start);
   const weekKcal = weekSessions.reduce((n, s) => n + estimateKcal(s, exercises ?? [], latestWeight(metrics ?? [])), 0);
+  const daySet = new Set(done.map((s) => s.date));
+  let streak = 0;
+  const cursor = new Date();
+  while (daySet.has(localDate(cursor))) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
   const parts = bodyPartSets(done, exercises ?? [], 28, localDate());
   const totalPartSets = parts.reduce((n, p) => n + p.sets, 0) || 1;
 
@@ -28,6 +35,7 @@ export function StatsScreen() {
           <span className="text-3xl font-semibold tabular-nums">{thisWeek.sessions}</span>
           <span className="pb-1 text-xs text-muted">次训练</span>
         </div>
+        <div className="mt-1 text-[12px] text-muted">连续打卡 <span className="font-semibold text-ink">{streak}</span> 天</div>
         <div className="mt-2 flex gap-2 text-[12px] text-muted">
           <span>{thisWeek.sets} 组</span>
           <span>·</span>

@@ -30,6 +30,8 @@ export interface Exercise {
   isCustom: boolean;
   /** 口语/器械别名，参与搜索 */
   tags?: string[];
+  /** 中文分步说明（离线内置） */
+  st?: string[];
   links?: TutorialLink[];
 }
 
@@ -117,6 +119,8 @@ export interface Settings {
   schedule?: Record<string, string[]>;
   /** 每周固定安排：1-7（周一=1）→ 例程 id */
   weeklySchedule?: Record<string, string>;
+  /** 经期记录（仅本地） */
+  cycle?: { lastStart: string; length: number; periodLength?: number };
 }
 
 export type DB = Dexie & {

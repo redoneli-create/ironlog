@@ -61,6 +61,20 @@ function Detail({ id, onClose }: { id: string; onClose: () => void }) {
         )}
       </div>
 
+      {!!ex.st?.length && (
+        <div className="mt-4 border-t border-line pt-3">
+          <div className="text-[12px] text-muted">动作步骤</div>
+          <ol className="mt-1.5 space-y-1.5">
+            {ex.st.map((line, i) => (
+              <li key={i} className="flex gap-2 text-[12px] leading-relaxed">
+                <span className="text-accent">{i + 1}</span>
+                <span>{line}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
       <div className="mt-4 border-t border-line pt-3">
         <div className="text-[12px] text-muted">历史与纪录</div>
         <div className="mt-1.5">
