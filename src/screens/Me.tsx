@@ -208,34 +208,77 @@ export function MeScreen() {
       </Card>
 
       <Card>
-        <SectionTitle>
+        <SectionTitle
+          right={
+            settings?.cycle ? (
+              <button
+                onClick={() => {
+                  if (confirm("清除经期记录？只删除本机数据，不影响训练记录")) void patch({ cycle: undefined });
+                }}
+                className="text-[11px] text-muted"
+              >
+                清除记录
+              </button>
+            ) : undefined
+          }
+        >
           <span className="inline-flex items-center gap-1.5"><Icon name="sparkle" />女性健康</span>
         </SectionTitle>
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          <Field label="上次经期开始">
-            <TextInput value={cycleDate} onChange={setCycleDate} type="date" />
-          </Field>
-          <Field label="周期长度（天）">
-            <TextInput value={cycleLen} onChange={setCycleLen} inputMode="numeric" />
-          </Field>
-        </div>
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-[11px] text-muted">仅保存在本机，不上传</span>
-          <button onClick={() => saveCycle()} className="rounded-lg bg-accent/15 px-2.5 py-1 text-[11px] font-semibold text-accent">
-            保存周期
-          </button>
-        </div>
-        {cycle && (
-          <p className="mt-2 text-[12px] text-muted">
-            当前：{PHASE_LABEL[cycle.phase]} 第 {cycle.day} 天 · 下次预计 {cycle.nextStart.slice(5)}（还有 {cycle.daysToNext} 天）
-          </p>
+
+        {settings?.cycleEnabled === false ? (
+          <div className="mt-2 flex items-center justify-between">
+            <span className="text-[12px] text-muted">经期模块已关闭，首页不再显示建议</span>
+            <button
+              onClick={() => void patch({ cycleEnabled: true })}
+              className="rounded-lg bg-accent/15 px-2.5 py-1 text-[11px] font-semibold text-accent"
+            >
+              开启
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <Field label="上次经期开始">
+                <TextInput value={cycleDate} onChange={setCycleDate} type="date" />
+              </Field>
+              <Field label="周期长度（天）">
+                <TextInput value={cycleLen} onChange={setCycleLen} inputMode="numeric" />
+              </Field>
+            </div>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-[11px] text-muted">仅保存在本机，不上传</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    if (confirm("关闭女性健康模块？会同时清除经期数据")) {
+                      void patch({ cycle: undefined, cycleEnabled: false });
+                    }
+                  }}
+                  className="rounded-lg border border-line px-2.5 py-1 text-[11px] text-muted"
+                >
+                  关闭模块
+                </button>
+                <button
+                  onClick={() => saveCycle()}
+                  className="rounded-lg bg-accent/15 px-2.5 py-1 text-[11px] font-semibold text-accent"
+                >
+                  保存周期
+                </button>
+              </div>
+            </div>
+            {cycle && (
+              <p className="mt-2 text-[12px] text-muted">
+                当前：{PHASE_LABEL[cycle.phase]} 第 {cycle.day} 天 · 下次预计 {cycle.nextStart.slice(5)}（还有 {cycle.daysToNext} 天）
+              </p>
+            )}
+            <button
+              onClick={() => setTipsOpen(true)}
+              className="press mt-3 w-full rounded-xl border border-line py-2.5 text-[12px]"
+            >
+              女性健康小贴士 · {TIPS.length} 篇（离线内置）
+            </button>
+          </>
         )}
-        <button
-          onClick={() => setTipsOpen(true)}
-          className="press mt-3 w-full rounded-xl border border-line py-2.5 text-[12px]"
-        >
-          女性健康小贴士 · {TIPS.length} 篇（离线内置）
-        </button>
         {tipsOpen && <TipsPage onClose={() => setTipsOpen(false)} />}
       </Card>
 

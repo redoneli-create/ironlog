@@ -326,6 +326,7 @@ function Workout(props: { session: Session }) {
     const wasDone = isDone(session.logs, slot.exerciseId, setNo);
     await toggleSet(session, slot.exerciseId, setNo, w, r);
     if (!wasDone) startRest(restOf(slot), exerciseLabel(byId.get(slot.exerciseId)));
+    else stopRest();
   };
 
   return (
@@ -478,7 +479,7 @@ function Picker({ onNavigate, onOpenTips }: { onNavigate: (tab: "plans" | "libra
         </button>
       </div>
 
-      {cycle && (
+      {settings?.cycleEnabled !== false && cycle && (
         <Card className="border-accent/30">
           <div className="flex items-baseline justify-between">
             <span className="text-[12px] text-muted">周期 · {PHASE_LABEL[cycle.phase]} 第 {cycle.day} 天</span>

@@ -121,6 +121,8 @@ export interface Settings {
   weeklySchedule?: Record<string, string>;
   /** 经期记录（仅本地） */
   cycle?: { lastStart: string; length: number; periodLength?: number };
+  /** 女性健康模块总开关 */
+  cycleEnabled?: boolean;
 }
 
 export type DB = Dexie & {
