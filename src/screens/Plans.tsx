@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   db,
@@ -36,6 +36,30 @@ const toBlocks = (slots: Slot[]): Block[] => {
   }
   return blocks;
 };
+
+
+function NumField(props: { label: string; value: number; onChange: (v: number) => void; placeholder?: string }) {
+  const [text, setText] = useState(String(props.value || ""));
+  useEffect(() => {
+    setText(props.value ? String(props.value) : "");
+  }, [props.value]);
+  return (
+    <label className="block">
+      <div className="mb-0.5 text-[11px] text-muted">{props.label}</div>
+      <input
+        inputMode="numeric"
+        value={text}
+        placeholder={props.placeholder ?? "0"}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={() => {
+          const n = Number(text);
+          props.onChange(Number.isFinite(n) ? n : 0);
+        }}
+        className="h-9 w-full rounded-lg bg-surface px-2 text-xs tabular-nums outline-none focus:ring-2 focus:ring-accent/50"
+      />
+    </label>
+  );
+}
 
 const Mini = (props: { label: string; value: string; onChange: (v: string) => void; mode?: "numeric" | "text" }) => (
   <label className="block">
@@ -132,26 +156,26 @@ function RoutineEditor(props: { routine: Routine | null; onClose: () => void }) 
             </div>
             {byId.get(s.exerciseId)?.bodyPart === "cardio" ? (
               <div className="mt-2 grid grid-cols-2 gap-2">
-                <Mini
+                <NumField
                   label="时长(分钟)"
-                  value={String(Math.round((s.durationSec ?? 1200) / 60))}
-                  onChange={(v) => patch(i, { durationSec: (Number(v) || 1) * 60 })}
+                  value={Math.round((s.durationSec ?? 1200) / 60)}
+                  onChange={(v) => patch(i, { durationSec: Math.max(1, v) * 60 })}
                 />
-                <Mini label="休(s)" value={String(s.restSec)} onChange={(v) => patch(i, { restSec: Number(v) || 0 })} />
+                <NumField label="休(s)" value={s.restSec} onChange={(v) => patch(i, { restSec: Math.max(0, v) })} />
               </div>
             ) : (
             <>
             <div className="mt-2 grid grid-cols-3 gap-2">
-              <Mini label="组" value={String(s.sets)} onChange={(v) => patch(i, { sets: Number(v) || 1 })} />
+              <NumField label="组" value={s.sets} onChange={(v) => patch(i, { sets: Math.max(1, v) })} />
               <Mini label="次" mode="text" value={s.reps} onChange={(v) => patch(i, { reps: v })} />
-              <Mini
+              <NumField
                 label="重量 kg"
-                value={s.weight ? String(s.weight) : ""}
-                onChange={(v) => patch(i, { weight: v ? Number(v) : undefined })}
+                value={s.weight ?? 0}
+                onChange={(v) => patch(i, { weight: v ? v : undefined })}
               />
             </div>
             <div className="mt-2 grid grid-cols-2 gap-2">
-              <Mini label="休(s)" value={String(s.restSec)} onChange={(v) => patch(i, { restSec: Number(v) || 0 })} />
+              <NumField label="休(s)" value={s.restSec} onChange={(v) => patch(i, { restSec: Math.max(0, v) })} />
               <Mini label="Tempo" mode="text" value={s.tempo ?? ""} onChange={(v) => patch(i, { tempo: v || undefined })} />
             </div>
             </>

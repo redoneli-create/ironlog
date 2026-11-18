@@ -23,7 +23,7 @@ export function TipsPage({ onClose }: { onClose: () => void }) {
           <div className="min-w-0">
             <div className="text-lg font-semibold">{open ? "小贴士" : "女性健康"}</div>
             <div className="text-[11px] text-muted">
-              {open ? open.tag : "离线内置 " + TIPS.length + " 篇 · 不联网"}
+              {open ? open.tag + " · " + open.read : "离线内置 " + TIPS.length + " 篇 · 不联网"}
             </div>
           </div>
         </div>
@@ -31,8 +31,9 @@ export function TipsPage({ onClose }: { onClose: () => void }) {
         {open ? (
           <article className="mt-5">
             <h1 className="text-2xl font-semibold leading-snug">{open.title}</h1>
-            <div className="mt-2">
+            <div className="mt-2 flex items-center gap-2">
               <span className="rounded-md bg-accent/12 px-2 py-0.5 text-[11px] text-accent">{open.tag}</span>
+              <span className="text-[11px] text-muted">阅读 {open.read}</span>
             </div>
             <p className="mt-4 whitespace-pre-wrap text-[15px] leading-8 text-ink/90">{open.body}</p>
             <div className="mt-6 rounded-xl bg-surface2 p-3 text-[12px] leading-6 text-muted">{TIP_DISCLAIMER}</div>

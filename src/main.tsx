@@ -138,7 +138,7 @@ function App() {
       </header>
 
       <main className="flex-1 px-4 pb-28">
-        {tab === "train" && <TrainScreen onNavigate={setTab} />}
+        {tab === "train" && <TrainScreen />}
         {tab === "plans" && <PlansScreen onStart={() => setTab("train")} />}
         {tab === "library" && <LibraryScreen />}
         {tab === "body" && <DataScreen />}
