@@ -25,6 +25,7 @@ import { epley, ghostsOf, homeSignal, suggestNext } from "../lib/metrics";
 import { pushBack } from "../lib/backstack";
 import { FollowAlong } from "./FollowAlong";
 import { cycleInfo, PHASE_LABEL, PHASE_TIP } from "../lib/cycle";
+import { cardio, cardioElapsed, useCardio } from "../lib/cardioTimer";
 import { startRest, stopRest } from "../lib/rest";
 import { keepScreenOn } from "../lib/keepAwake";
 import { ensureNotifyPermission } from "../lib/notify";
@@ -115,29 +116,29 @@ function CardioCard(props: {
   kg: number;
   onToggle: (minutes: number) => void;
 }) {
+  const timer = useCardio();
+  const mine = timer?.exId === props.slot.exerciseId;
   const [min, setMin] = useState(String(Math.round((props.slot.durationSec ?? 1200) / 60)));
-  const [startedAt, setStartedAt] = useState<number | null>(null);
-  const [elapsed, setElapsed] = useState(0);
+  const [now, setNow] = useState(Date.now());
   const done = !!props.log;
   const kcal = Math.round(((8 * 3.5 * props.kg) / 200) * (Number(min) || 0));
 
   useEffect(() => {
-    if (!startedAt) return;
-    const t = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 500);
+    if (!mine || timer?.paused) return;
+    const t = setInterval(() => setNow(Date.now()), 500);
     return () => clearInterval(t);
-  }, [startedAt]);
+  }, [mine, timer?.paused]);
 
-  const toggleTimer = () => {
-    if (startedAt) {
-      const secs = Math.floor((Date.now() - startedAt) / 1000);
-      setStartedAt(null);
-      setElapsed(0);
-      if (secs > 0) setMin(String(Math.max(1, Math.round(secs / 60))));
-    } else {
-      setElapsed(0);
-      setStartedAt(Date.now());
-    }
+  const elapsed = mine ? cardioElapsed(timer!, now) : 0;
+  const shown =
+    String(Math.floor(elapsed / 60000)).padStart(2, "0") + ":" + String(Math.floor((elapsed % 60000) / 1000)).padStart(2, "0");
+
+  const finish = () => {
+    const minutes = Math.max(1, Math.round(elapsed / 60000));
+    cardio.stop();
+    props.onToggle(minutes);
   };
+
   return (
     <div className="rounded-3xl border border-line bg-surface p-3">
       <div className="flex items-baseline justify-between gap-2">
@@ -151,29 +152,31 @@ function CardioCard(props: {
       </div>
       <div className="mt-2 flex items-center gap-2">
         <button
-          onClick={toggleTimer}
+          onClick={() => (mine ? cardio.openClock() : cardio.start(props.slot.exerciseId, exerciseLabel(props.exercise), Math.max(1, Number(min) || 20)))}
           className={
-            "press h-12 rounded-xl px-3 text-[12px] font-medium " +
-            (startedAt ? "bg-accent/15 text-accent" : "bg-surface2 text-muted")
+            "press h-12 rounded-xl px-3 text-[12px] font-medium tabular-nums " +
+            (mine ? "bg-accent/15 text-accent" : "bg-surface2 text-muted")
           }
         >
-          {startedAt ? String(Math.floor(elapsed / 60)).padStart(2, "0") + ":" + String(elapsed % 60).padStart(2, "0") : "计时"}
+          {mine ? shown : "计时"}
         </button>
-        <input
-          inputMode="numeric"
-          value={min}
-          onChange={(e) => setMin(e.target.value)}
-          className="h-12 w-20 rounded-xl bg-surface2 px-3 text-center text-base tabular-nums outline-none focus:ring-2 focus:ring-accent/50"
-        />
-        <span className="text-[12px] text-muted">分钟</span>
+        {!mine && (
+          <input
+            inputMode="numeric"
+            value={min}
+            onChange={(e) => setMin(e.target.value)}
+            className="h-12 w-20 rounded-xl bg-surface2 px-3 text-center text-base tabular-nums outline-none focus:ring-2 focus:ring-accent/50"
+          />
+        )}
+        {!mine && <span className="text-[12px] text-muted">分钟</span>}
         <button
-          onClick={() => props.onToggle(Number(min) || 0)}
+          onClick={() => (mine ? finish() : props.onToggle(Number(min) || 0))}
           className={
             "press ml-auto h-12 rounded-xl px-5 text-sm font-semibold " +
             (done ? "bg-accent/15 text-accent" : "bg-accent text-onaccent")
           }
         >
-          {done ? "已完成" : "完成"}
+          {done ? "已完成" : mine ? "结束并记录" : "完成"}
         </button>
       </div>
     </div>

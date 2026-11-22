@@ -16,6 +16,7 @@ import { StatusBar, Style } from "@capacitor/status-bar";
 import { App as CapApp } from "@capacitor/app";
 import { runBack } from "./lib/backstack";
 import { syncPlanWidget } from "./lib/widget";
+import { CardioClock, CardioPill } from "./components/CardioClock";
 
 type Tab = "train" | "plans" | "library" | "body" | "me";
 
@@ -166,6 +167,8 @@ function App() {
           })}
         </div>
       </nav>
+      <CardioPill />
+      <CardioClock />
       <Toasts />
     </div>
   );
